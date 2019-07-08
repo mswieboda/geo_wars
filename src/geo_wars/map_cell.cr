@@ -1,6 +1,6 @@
 module GeoWars
   class MapCell
-    BORDER_COLOR      = LibRay::GRAY
+    BORDER_COLOR      = LibRay::DARKGRAY
     BORDER_INSET_SIZE = 0
 
     def initialize(@x : Int32, @y : Int32, @terrain : Terrain)
