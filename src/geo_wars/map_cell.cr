@@ -3,13 +3,22 @@ module GeoWars
     BORDER_COLOR      = LibRay::GRAY
     BORDER_INSET_SIZE = 0
 
-    def initialize(@x : Int32, @y : Int32)
+    def initialize(@x : Int32, @y : Int32, @terrain : Terrain)
     end
 
     def update
     end
 
     def draw(size)
+      # terrain
+      LibRay.draw_rectangle(
+        pos_x: @x * size,
+        pos_y: @y * size,
+        width: size,
+        height: size,
+        color: @terrain.color
+      )
+
       # border
       LibRay.draw_rectangle_lines(
         pos_x: @x * size + BORDER_INSET_SIZE,

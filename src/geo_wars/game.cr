@@ -1,7 +1,7 @@
 module GeoWars
   class Game
-    SCREEN_WIDTH  = 1024
-    SCREEN_HEIGHT =  768
+    SCREEN_WIDTH  = 1664
+    SCREEN_HEIGHT =  960
 
     DEBUG = false
 
@@ -11,6 +11,7 @@ module GeoWars
     def initialize
       LibRay.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "Geo")
       LibRay.set_target_fps(TARGET_FPS)
+
       @map = Map.new
     end
 
