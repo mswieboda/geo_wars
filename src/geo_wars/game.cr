@@ -1,7 +1,7 @@
 module GeoWars
   class Game
-    SCREEN_WIDTH  = 1664
-    SCREEN_HEIGHT =  960
+    SCREEN_WIDTH  = 1280
+    SCREEN_HEIGHT =  768
 
     DEBUG = false
 
