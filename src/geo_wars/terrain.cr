@@ -19,5 +19,9 @@ module GeoWars
         LibRay::BLANK
       end
     end
+
+    def self.random
+      Terrain.values.sample
+    end
   end
 end

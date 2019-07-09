@@ -2,33 +2,34 @@ module GeoWars
   class Map
     property cells : Array(Array(MapCell))
 
-    @cell_width : Int32
-    @cell_height : Int32
+    @cells_x : Int32
+    @cells_y : Int32
 
     DEFAULT_CELL_SIZE = 64
 
-    def initialize(@width = Game::SCREEN_WIDTH, @height = Game::SCREEN_HEIGHT, @cell_size = DEFAULT_CELL_SIZE)
-      @cell_width = @width / @cell_size
-      @cell_height = @height / @cell_size
-      @cells = Array.new(@cell_width) { |x| Array.new(@cell_height) { |y| MapCell.new(x, y, Terrain::Field) } }
+    def initialize(@cells_x, @cells_y, width = Game::SCREEN_WIDTH, height = Game::SCREEN_HEIGHT, cell_size = DEFAULT_CELL_SIZE)
+      @viewport = MapViewport.new(width: width, height: height, cell_size: cell_size)
 
-      @unit = Unit.new(5, 10)
+      @cells = Array.new(@cells_x) { |x| Array.new(@cells_y) { |y| MapCell.new(x, y, Terrain.random) } }
 
-      @cursor = Cursor.new(3, 13)
+      @unit = Unit.new(3, 3)
+      @cursor = Cursor.new(3, 3)
     end
 
     def update
       frame_time = LibRay.get_frame_time
 
-      @cursor.update(@cell_width, @cell_height, frame_time)
+      @cursor.update(@cells_x, @cells_y, frame_time)
+      @viewport.update(@cursor, @cells_x, @cells_y)
     end
 
     def draw
-      @cells.each { |row| row.each { |cell| cell.draw(@cell_size) } }
+      @cells.each { |row| row.each { |cell| cell.draw(@viewport) } }
 
-      @unit.draw(@cell_size, LibRay::GREEN)
+      @unit.draw(@viewport, LibRay::GREEN)
 
-      @cursor.draw(@cell_size)
+      @cursor.draw(@viewport)
+      @viewport.draw
     end
   end
 end

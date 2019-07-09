@@ -49,13 +49,18 @@ module GeoWars
       @size_ratio_shrink_timer.reset if @size_ratio_shrink_timer.done?
     end
 
-    def draw(size)
+    def draw(viewport)
+      return unless viewport.viewable_cell?(@x, @y)
+
+      x = viewport.real_x(@x)
+      y = viewport.real_y(@y)
+
       BORDER_WIDTH.times do |num|
         LibRay.draw_rectangle_lines(
-          pos_x: @x * size + (num + size - size * @size_ratio) / 2,
-          pos_y: @y * size + (num + size - size * @size_ratio) / 2,
-          width: (size - num) * @size_ratio,
-          height: (size - num) * @size_ratio,
+          pos_x: x + (num + viewport.cell_size - viewport.cell_size * @size_ratio) / 2,
+          pos_y: y + (num + viewport.cell_size - viewport.cell_size * @size_ratio) / 2,
+          width: (viewport.cell_size - num) * @size_ratio,
+          height: (viewport.cell_size - num) * @size_ratio,
           color: CURSOR_COLOR
         )
       end
