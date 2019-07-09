@@ -1,6 +1,7 @@
 module GeoWars
   class Map
     property cells : Array(MapCell)
+    getter? editing
 
     @cells_x : Int32
     @cells_y : Int32
@@ -35,12 +36,37 @@ module GeoWars
 
       @units.each { |unit| unit.update(frame_time) }
 
-      if LibRay.key_pressed?(LibRay::KEY_F1)
-        export_map
-      end
+      editor_update(frame_time)
+    end
 
-      if LibRay.key_pressed?(LibRay::KEY_F2)
-        import_map
+    def editor_update(frame_time)
+      @editing = !@editing if LibRay.key_pressed?(LibRay::KEY_F1)
+
+      return unless editing?
+
+      import_map if LibRay.key_pressed?(LibRay::KEY_F2)
+      export_map if LibRay.key_pressed?(LibRay::KEY_F3)
+
+      set_terrain(Terrain::Field) if LibRay.key_down?(LibRay::KEY_ONE)
+      set_terrain(Terrain::Road) if LibRay.key_down?(LibRay::KEY_TWO)
+      set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_THREE)
+      set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FOUR)
+      flip_terrain if LibRay.key_pressed?(Game::KEY_TILDE)
+    end
+
+    def flip_terrain
+      cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
+
+      if cell
+        cell.terrain = cell.terrain.value == Terrain.values.last.value ? Terrain.values[0] : Terrain.values[cell.terrain.value + 1]
+      end
+    end
+
+    def set_terrain(terrain)
+      cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
+
+      if cell && cell.terrain != terrain
+        cell.terrain = terrain
       end
     end
 
@@ -51,9 +77,20 @@ module GeoWars
 
       @cursor.draw(@viewport)
       @viewport.draw
+
+      if editing?
+        LibRay.draw_rectangle(
+          pos_x: 0,
+          pos_y: 0,
+          width: 100,
+          height: 100,
+          color: LibRay::MAGENTA
+        )
+      end
     end
 
     def export_map
+      puts "export_map!"
       cells = @cells.map(&.serialize).join("\n")
       units = @units.map(&.serialize).join("\n")
       map = [cells, units].join("\n")
@@ -64,6 +101,7 @@ module GeoWars
     end
 
     def import_map
+      puts "import_map!"
       lines = File.read_lines("./build/maps/map.gw_map")
 
       @cells = Array(MapCell).new

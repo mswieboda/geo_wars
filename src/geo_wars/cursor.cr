@@ -51,11 +51,6 @@ module GeoWars
     end
 
     def movement(cells_x, cells_y, frame_time)
-      @y -= 1 if LibRay.key_pressed?(LibRay::KEY_W)
-      @x -= 1 if LibRay.key_pressed?(LibRay::KEY_A)
-      @y += 1 if LibRay.key_pressed?(LibRay::KEY_S)
-      @x += 1 if LibRay.key_pressed?(LibRay::KEY_D)
-
       @y -= 1 if keys_held?(frame_time, [LibRay::KEY_W, LibRay::KEY_UP], :up)
       @x -= 1 if keys_held?(frame_time, [LibRay::KEY_A, LibRay::KEY_LEFT], :left)
       @y += 1 if keys_held?(frame_time, [LibRay::KEY_S, LibRay::KEY_DOWN], :down)
@@ -92,6 +87,8 @@ module GeoWars
     end
 
     def keys_held?(frame_time, keys, timer_key)
+      return true if keys.any? { |key| LibRay.key_pressed?(key) }
+
       if keys.any? { |key| LibRay.key_down?(key) }
         @key_down_initial_timers[timer_key].increase(frame_time)
 

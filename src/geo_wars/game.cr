@@ -8,6 +8,9 @@ module GeoWars
     TARGET_FPS = 60
     DRAW_FPS   = DEBUG
 
+    KEY_TILDE =  96
+    KEY_TAB   = 258
+
     def initialize
       LibRay.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "Geo")
       LibRay.set_target_fps(TARGET_FPS)

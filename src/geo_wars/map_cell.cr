@@ -5,7 +5,7 @@ module GeoWars
 
     getter x : Int32
     getter y : Int32
-    getter terrain : Terrain
+    property terrain : Terrain
 
     def initialize(@x, @y, @terrain)
     end
