@@ -19,8 +19,7 @@ module GeoWars
     def update
       frame_time = LibRay.get_frame_time
 
-      @cursor.update(@cells_x, @cells_y, frame_time)
-      @viewport.update(@cursor, @cells_x, @cells_y)
+      @viewport.update(@cursor, @cells_x, @cells_y, frame_time)
     end
 
     def draw
