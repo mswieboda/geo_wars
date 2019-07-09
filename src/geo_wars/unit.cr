@@ -63,5 +63,14 @@ module GeoWars
     def unselect
       @selected = false
     end
+
+    def serialize
+      "u:#{@x},#{@y}"
+    end
+
+    def self.deserialize(line)
+      x, y = line.split(":").last.split(",").map(&.to_i)
+      Unit.new(x, y)
+    end
   end
 end

@@ -3,7 +3,11 @@ module GeoWars
     BORDER_COLOR      = LibRay::DARKGRAY
     BORDER_INSET_SIZE = 0
 
-    def initialize(@x : Int32, @y : Int32, @terrain : Terrain)
+    getter x : Int32
+    getter y : Int32
+    getter terrain : Terrain
+
+    def initialize(@x, @y, @terrain)
     end
 
     def update
@@ -37,6 +41,20 @@ module GeoWars
         height: height - BORDER_INSET_SIZE * 2,
         color: BORDER_COLOR
       )
+    end
+
+    def serialize
+      "mc:#{@x},#{@y},#{@terrain.value}"
+    end
+
+    def self.deserialize(line)
+      values = line.split(":").last.split(",").map(&.to_i)
+
+      x = values[0]
+      y = values[1]
+      terrain = Terrain.new(values[2])
+
+      MapCell.new(x, y, terrain)
     end
   end
 end
