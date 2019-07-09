@@ -27,6 +27,8 @@ module GeoWars
         color: @terrain.color
       )
 
+      return unless Game::DEBUG
+
       # border
       LibRay.draw_rectangle_lines(
         pos_x: x + BORDER_INSET_SIZE,

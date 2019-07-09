@@ -53,6 +53,8 @@ module GeoWars
     end
 
     def draw
+      return unless Game::DEBUG
+
       5.times do |num|
         LibRay.draw_rectangle_lines(
           pos_x: num,

@@ -13,8 +13,8 @@ module GeoWars
       LibRay.set_target_fps(TARGET_FPS)
 
       @map = Map.new(
-        cells_x: 11,
-        cells_y: 11
+        cells_x: 20,
+        cells_y: 20
       )
     end
 
