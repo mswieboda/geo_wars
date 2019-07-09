@@ -52,6 +52,15 @@ module GeoWars
       set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_THREE)
       set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FOUR)
       flip_terrain if LibRay.key_pressed?(Game::KEY_TILDE)
+
+      selected_unit = @units.find { |unit| unit.selected? }
+
+      if selected_unit
+        if LibRay.key_pressed?(LibRay::KEY_ENTER)
+          selected_unit.move(@cursor.x, @cursor.y)
+          selected_unit.unselect
+        end
+      end
     end
 
     def flip_terrain

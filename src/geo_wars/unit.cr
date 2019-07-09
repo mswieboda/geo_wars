@@ -56,6 +56,11 @@ module GeoWars
       end
     end
 
+    def move(x, y)
+      @x = x
+      @y = y
+    end
+
     def select
       @selected = !@selected
     end
