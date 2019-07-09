@@ -25,14 +25,14 @@ module GeoWars
         @y = (cursor.y * cell_size) - cell_size * CELL_THRESHOLD
       end
 
-      @x = x.clamp(0, cells_x * cell_size - width)
-      @y = y.clamp(0, cells_y * cell_size - height)
+      @x = x.clamp(-cell_size, cells_x * cell_size - width + cell_size)
+      @y = y.clamp(-cell_size, cells_y * cell_size - height + cell_size)
     end
 
     def viewable_cell?(x, y, w, h)
       x *= cell_size
       y *= cell_size
-      # x >= @x && x < @x + width && y >= @y && y < @y + height
+
       (x >= @x || x + w >= @x) && x < @x + width && (y >= @y || y + h >= @y) && y < @y + height
     end
 

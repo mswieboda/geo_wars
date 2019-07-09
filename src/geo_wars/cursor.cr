@@ -1,13 +1,13 @@
 module GeoWars
   class Cursor
-    SIZE_RATIO              =  0.9
-    SIZE_RATIO_SHRINK       =  0.8
+    SIZE_RATIO              =    8
+    SIZE_RATIO_SHRINK       =    4
     SIZE_RATIO_SHRINK_TIMER = 0.75
 
     KEY_DOWN_INITIAL_TIMER =   0.5
     KEY_DOWN_TIMER         = 0.125
 
-    BORDER_WIDTH = 6
+    BORDER_WIDTH_DIVISOR = 16
 
     CURSOR_COLOR = LibRay::BLACK
 
@@ -50,20 +50,20 @@ module GeoWars
     end
 
     def draw(viewport)
-      width = viewport.cell_size
-      height = viewport.cell_size
+      width = viewport.cell_size - viewport.cell_size / @size_ratio
+      height = viewport.cell_size - viewport.cell_size / @size_ratio
 
       return unless viewport.viewable_cell?(@x, @y, width, height)
 
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 
-      BORDER_WIDTH.times do |num|
+      (viewport.cell_size / BORDER_WIDTH_DIVISOR).times do |num|
         LibRay.draw_rectangle_lines(
-          pos_x: x + (num + width - width * @size_ratio) / 2,
-          pos_y: y + (num + height - height * @size_ratio) / 2,
-          width: (width - num) * @size_ratio,
-          height: (height - num) * @size_ratio,
+          pos_x: x + num + (viewport.cell_size - width) / 2,
+          pos_y: y + num + (viewport.cell_size - height) / 2,
+          width: width - num * 2,
+          height: height - num * 2,
           color: CURSOR_COLOR
         )
       end
