@@ -12,7 +12,10 @@ module GeoWars
       LibRay.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "Geo")
       LibRay.set_target_fps(TARGET_FPS)
 
-      @map = Map.new(cells_x: 40, cells_y: 30)
+      @map = Map.new(
+        cells_x: 18,
+        cells_y: 30
+      )
     end
 
     def run

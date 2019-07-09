@@ -24,9 +24,6 @@ module GeoWars
       elsif real_y(cursor.y) <= cell_size * CELL_THRESHOLD
         @y = (cursor.y * cell_size) - cell_size * CELL_THRESHOLD
       end
-
-      @x = x.clamp(-cell_size, cells_x * cell_size - width + cell_size)
-      @y = y.clamp(-cell_size, cells_y * cell_size - height + cell_size)
     end
 
     def viewable_cell?(x, y, w, h)
