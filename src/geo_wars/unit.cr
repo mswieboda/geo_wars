@@ -3,6 +3,7 @@ module GeoWars
     getter x : Int32
     getter y : Int32
     getter? selected
+    getter moves : Array(NamedTuple(x: Int32, y: Int32))
 
     SIZE_RATIO = 0.5
 
@@ -17,6 +18,8 @@ module GeoWars
     def initialize(@x, @y)
       @selected = false
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
+      @moves = Array(NamedTuple(x: Int32, y: Int32)).new
+      @moves = default_moves
     end
 
     def update(frame_time)
@@ -67,19 +70,7 @@ module GeoWars
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 
-      moves = (MAX_MOVEMENT + 1).times.to_a.flat_map do |max_moves|
-        (max_moves + 1).times.to_a.map { |num| {x: 0 + num, y: max_moves - num} }
-      end
-
-      more_moves = moves.each_with_object([] of NamedTuple(x: Int32, y: Int32)) do |move, more_moves|
-        more_moves << {x: -move[:x], y: -move[:y]}
-        more_moves << {x: -move[:x], y: move[:y]}
-        more_moves << {x: move[:x], y: -move[:y]}
-      end
-
-      moves = moves.concat(more_moves)
-
-      moves.each do |move|
+      @moves.each do |move|
         LibRay.draw_rectangle(
           pos_x: x + move[:x] * viewport.cell_size,
           pos_y: y + move[:y] * viewport.cell_size,
@@ -94,6 +85,16 @@ module GeoWars
           height: viewport.cell_size,
           color: SELECTED_BORDER_COLOR
         )
+      end
+    end
+
+    def default_moves
+      (-MAX_MOVEMENT..MAX_MOVEMENT).to_a.flat_map do |x|
+        max = MAX_MOVEMENT - x.abs
+
+        (-max..max).to_a.flat_map do |y|
+          {x: x, y: y}
+        end
       end
     end
 
