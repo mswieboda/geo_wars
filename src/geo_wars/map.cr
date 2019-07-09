@@ -52,12 +52,19 @@ module GeoWars
         @units.select(&.selected?).each(&.unselect)
       end
 
+      if selected_unit
+        if LibRay.key_pressed?(Game::INPUT_ACCEPT)
+          selected_unit.move(@cursor.x, @cursor.y)
+          selected_unit.unselect
+        end
+      end
+
       @units.each { |unit| unit.update(frame_time) }
 
-      editor_update(frame_time, selected_unit)
+      editor_update(frame_time)
     end
 
-    def editor_update(frame_time, selected_unit)
+    def editor_update(frame_time)
       @editing = !@editing if LibRay.key_pressed?(LibRay::KEY_F1)
 
       return unless editing?
@@ -70,13 +77,6 @@ module GeoWars
       set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_THREE)
       set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FOUR)
       flip_terrain if LibRay.key_pressed?(Game::KEY_TILDE)
-
-      if selected_unit
-        if LibRay.key_pressed?(LibRay::KEY_ENTER)
-          selected_unit.move(@cursor.x, @cursor.y)
-          selected_unit.unselect
-        end
-      end
     end
 
     def flip_terrain
