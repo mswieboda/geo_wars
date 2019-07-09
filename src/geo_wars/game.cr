@@ -11,6 +11,9 @@ module GeoWars
     KEY_TILDE =  96
     KEY_TAB   = 258
 
+    INPUT_ACCEPT = LibRay::KEY_ENTER
+    INPUT_CANCEL = LibRay::KEY_BACKSPACE
+
     def initialize
       LibRay.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "Geo")
       LibRay.set_target_fps(TARGET_FPS)

@@ -3,6 +3,7 @@ module GeoWars
     getter x : Int32
     getter y : Int32
     getter? selection
+    getter? selection_cancel
 
     SIZE_RATIO              =    8
     SIZE_RATIO_SHRINK       =    4
@@ -39,10 +40,14 @@ module GeoWars
     end
 
     def selection_check
-      @selection = false
+      @selection = @selection_cancel = false
 
-      if LibRay.key_pressed?(LibRay::KEY_SPACE)
+      if LibRay.key_pressed?(Game::INPUT_ACCEPT)
         @selection = true
+      end
+
+      if LibRay.key_pressed?(Game::INPUT_CANCEL)
+        @selection_cancel = true
       end
     end
 

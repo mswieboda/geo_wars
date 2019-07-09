@@ -23,12 +23,18 @@ module GeoWars
     end
 
     def update(frame_time)
+      # valid move delta from map boundaries
       valid_move_deltas = POSSIBLE_MOVES.select { |move| @cursor.x + move[:x] < @cells_x && @cursor.y + move[:y] < @cells_y }
 
       selected_unit = @units.find { |unit| unit.selected? }
 
-      # TODO: set valid move deltas to inside the selected units move radius
-      # valid_move_deltas.select! { |move| selected_unit.movement_radius }
+      if selected_unit
+        valid_move_deltas.select! do |move|
+          selected_unit.moves.any? do |unit_move|
+            unit_move[:x] == @cursor.x + move[:x] && unit_move[:y] == @cursor.y + move[:y]
+          end
+        end
+      end
 
       @cursor.update(frame_time, valid_move_deltas)
       @viewport.update(@cursor, @cells_x, @cells_y)
@@ -42,6 +48,8 @@ module GeoWars
         else
           @units.select(&.selected?).each(&.unselect)
         end
+      elsif @cursor.selection_cancel?
+        @units.select(&.selected?).each(&.unselect)
       end
 
       @units.each { |unit| unit.update(frame_time) }

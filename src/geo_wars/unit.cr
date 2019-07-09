@@ -3,7 +3,6 @@ module GeoWars
     getter x : Int32
     getter y : Int32
     getter? selected
-    getter moves : Array(NamedTuple(x: Int32, y: Int32))
 
     SIZE_RATIO = 0.5
 
@@ -18,8 +17,8 @@ module GeoWars
     def initialize(@x, @y)
       @selected = false
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
-      @moves = Array(NamedTuple(x: Int32, y: Int32)).new
-      @moves = default_moves
+      @moves_relative = Array(NamedTuple(x: Int32, y: Int32)).new
+      @moves_relative = default_relative_moves
     end
 
     def update(frame_time)
@@ -70,7 +69,7 @@ module GeoWars
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 
-      @moves.each do |move|
+      @moves_relative.each do |move|
         LibRay.draw_rectangle(
           pos_x: x + move[:x] * viewport.cell_size,
           pos_y: y + move[:y] * viewport.cell_size,
@@ -88,7 +87,7 @@ module GeoWars
       end
     end
 
-    def default_moves
+    def default_relative_moves
       (-MAX_MOVEMENT..MAX_MOVEMENT).to_a.flat_map do |x|
         max = MAX_MOVEMENT - x.abs
 
@@ -96,6 +95,10 @@ module GeoWars
           {x: x, y: y}
         end
       end
+    end
+
+    def moves
+      @moves_relative.map { |move| {x: move[:x] + @x, y: move[:y] + @y} }
     end
 
     def move(x, y)
