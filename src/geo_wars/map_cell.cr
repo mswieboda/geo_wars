@@ -10,7 +10,10 @@ module GeoWars
     end
 
     def draw(viewport)
-      return unless viewport.viewable_cell?(@x, @y)
+      width = viewport.cell_size
+      height = viewport.cell_size
+
+      return unless viewport.viewable_cell?(@x, @y, width, height)
 
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
@@ -19,8 +22,8 @@ module GeoWars
       LibRay.draw_rectangle(
         pos_x: x,
         pos_y: y,
-        width: viewport.cell_size,
-        height: viewport.cell_size,
+        width: width,
+        height: height,
         color: @terrain.color
       )
 
@@ -28,8 +31,8 @@ module GeoWars
       LibRay.draw_rectangle_lines(
         pos_x: x + BORDER_INSET_SIZE,
         pos_y: y + BORDER_INSET_SIZE,
-        width: viewport.cell_size - BORDER_INSET_SIZE * 2,
-        height: viewport.cell_size - BORDER_INSET_SIZE * 2,
+        width: width - BORDER_INSET_SIZE * 2,
+        height: height - BORDER_INSET_SIZE * 2,
         color: BORDER_COLOR
       )
     end

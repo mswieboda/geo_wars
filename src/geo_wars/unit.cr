@@ -9,17 +9,20 @@ module GeoWars
     end
 
     def draw(viewport, color)
-      return unless viewport.viewable_cell?(@x, @y)
+      width = viewport.cell_size * SIZE_RATIO
+      height = viewport.cell_size * SIZE_RATIO
+
+      return unless viewport.viewable_cell?(@x, @y, width, height)
 
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 
       # border
       LibRay.draw_rectangle(
-        pos_x: x + (viewport.cell_size - viewport.cell_size * SIZE_RATIO) / 2,
-        pos_y: y + (viewport.cell_size - viewport.cell_size * SIZE_RATIO) / 2,
-        width: viewport.cell_size * SIZE_RATIO,
-        height: viewport.cell_size * SIZE_RATIO,
+        pos_x: x + (viewport.cell_size - width) / 2,
+        pos_y: y + (viewport.cell_size - height) / 2,
+        width: width,
+        height: height,
         color: color
       )
     end

@@ -6,21 +6,34 @@ module GeoWars
     getter y : Int32
     getter cell_size : Int32
 
+    CELL_THRESHOLD = 1
+
     def initialize(@width, @height, @cell_size)
       @x = @y = 0
     end
 
     def update(cursor : Cursor, cells_x : Int32, cells_y : Int32)
-      @x = (cursor.x * cell_size - width / 2).clamp(0, cells_x * cell_size - width).to_i
-      @y = (cursor.y * cell_size - height / 2).clamp(0, cells_y * cell_size - height).to_i
+      if real_x(cursor.x) >= width - cell_size * CELL_THRESHOLD
+        @x = (cursor.x * cell_size) - width + cell_size + cell_size * CELL_THRESHOLD
+      elsif real_x(cursor.x) <= cell_size * CELL_THRESHOLD
+        @x = (cursor.x * cell_size) - cell_size * CELL_THRESHOLD
+      end
 
-      puts "vp: (#{x}, #{y})"
+      if real_y(cursor.y) >= height - cell_size * CELL_THRESHOLD
+        @y = (cursor.y * cell_size) - height + cell_size + cell_size * CELL_THRESHOLD
+      elsif real_y(cursor.y) <= cell_size * CELL_THRESHOLD
+        @y = (cursor.y * cell_size) - cell_size * CELL_THRESHOLD
+      end
+
+      @x = x.clamp(0, cells_x * cell_size - width)
+      @y = y.clamp(0, cells_y * cell_size - height)
     end
 
-    def viewable_cell?(x, y)
+    def viewable_cell?(x, y, w, h)
       x *= cell_size
       y *= cell_size
-      x >= @x && x < @x + width && y >= @y && y < @y + height
+      # x >= @x && x < @x + width && y >= @y && y < @y + height
+      (x >= @x || x + w >= @x) && x < @x + width && (y >= @y || y + h >= @y) && y < @y + height
     end
 
     def real_x(cell_x)
