@@ -12,9 +12,7 @@ module GeoWars
       @x = @y = 0
     end
 
-    def update(cursor : Cursor, cells_x : Int32, cells_y : Int32, frame_time)
-      cursor.update(cells_x, cells_y, frame_time)
-
+    def update(cursor : Cursor, cells_x : Int32, cells_y : Int32)
       if real_x(cursor.x) >= width - cell_size * CELL_THRESHOLD
         @x = (cursor.x * cell_size) - width + cell_size + cell_size * CELL_THRESHOLD
       elsif real_x(cursor.x) <= cell_size * CELL_THRESHOLD

@@ -8,6 +8,8 @@ module GeoWars
 
     DEFAULT_CELL_SIZE = 64
 
+    POSSIBLE_MOVES = (-1..1).flat_map { |x| (-1..1).map { |y| {x: x, y: y} } }.select { |move| !(move[:x] == 0 && move[:y] == 0) }
+
     def initialize(@cells_x, @cells_y, width = Game::SCREEN_WIDTH, height = Game::SCREEN_HEIGHT, cell_size = DEFAULT_CELL_SIZE)
       @viewport = MapViewport.new(width: width, height: height, cell_size: cell_size)
 
@@ -21,14 +23,22 @@ module GeoWars
     end
 
     def update(frame_time)
-      @viewport.update(@cursor, @cells_x, @cells_y, frame_time)
+      valid_move_deltas = POSSIBLE_MOVES.select { |move| @cursor.x + move[:x] < @cells_x && @cursor.y + move[:y] < @cells_y }
+
+      selected_unit = @units.find { |unit| unit.selected? }
+
+      # TODO: set valid move deltas to inside the selected units move radius
+      # valid_move_deltas.select! { |move| selected_unit.movement_radius }
+
+      @cursor.update(frame_time, valid_move_deltas)
+      @viewport.update(@cursor, @cells_x, @cells_y)
 
       if @cursor.selection?
-        selected_unit = @units.find { |unit| @cursor.selected?(unit.x, unit.y) }
+        pre_selected_unit = @units.find { |unit| @cursor.selected?(unit.x, unit.y) }
 
-        if selected_unit
-          @units.select { |u| u != selected_unit && u.selected? }.each(&.unselect)
-          selected_unit.select
+        if pre_selected_unit
+          @units.select { |u| u != pre_selected_unit && u.selected? }.each(&.unselect)
+          pre_selected_unit.select
         else
           @units.select(&.selected?).each(&.unselect)
         end
@@ -36,10 +46,10 @@ module GeoWars
 
       @units.each { |unit| unit.update(frame_time) }
 
-      editor_update(frame_time)
+      editor_update(frame_time, selected_unit)
     end
 
-    def editor_update(frame_time)
+    def editor_update(frame_time, selected_unit)
       @editing = !@editing if LibRay.key_pressed?(LibRay::KEY_F1)
 
       return unless editing?
@@ -52,8 +62,6 @@ module GeoWars
       set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_THREE)
       set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FOUR)
       flip_terrain if LibRay.key_pressed?(Game::KEY_TILDE)
-
-      selected_unit = @units.find { |unit| unit.selected? }
 
       if selected_unit
         if LibRay.key_pressed?(LibRay::KEY_ENTER)

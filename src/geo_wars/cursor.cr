@@ -32,9 +32,9 @@ module GeoWars
       @size_ratio_shrink_timer = Timer.new(SIZE_RATIO_SHRINK_TIMER)
     end
 
-    def update(cells_x, cells_y, frame_time)
+    def update(frame_time, valid_move_deltas)
       selection_check
-      movement(cells_x, cells_y, frame_time)
+      movement(frame_time, valid_move_deltas)
       animation(frame_time)
     end
 
@@ -50,14 +50,26 @@ module GeoWars
       @x == x && @y == y
     end
 
-    def movement(cells_x, cells_y, frame_time)
-      @y -= 1 if keys_held?(frame_time, [LibRay::KEY_W, LibRay::KEY_UP], :up)
-      @x -= 1 if keys_held?(frame_time, [LibRay::KEY_A, LibRay::KEY_LEFT], :left)
-      @y += 1 if keys_held?(frame_time, [LibRay::KEY_S, LibRay::KEY_DOWN], :down)
-      @x += 1 if keys_held?(frame_time, [LibRay::KEY_D, LibRay::KEY_RIGHT], :right)
+    def movement(frame_time, valid_move_deltas)
+      x = y = 0
 
-      @x = @x.clamp(0, cells_x - 1)
-      @y = @y.clamp(0, cells_y - 1)
+      y -= 1 if keys_held?(frame_time, [LibRay::KEY_W, LibRay::KEY_UP], :up)
+      x -= 1 if keys_held?(frame_time, [LibRay::KEY_A, LibRay::KEY_LEFT], :left)
+      y += 1 if keys_held?(frame_time, [LibRay::KEY_S, LibRay::KEY_DOWN], :down)
+      x += 1 if keys_held?(frame_time, [LibRay::KEY_D, LibRay::KEY_RIGHT], :right)
+
+      delta = {x: x, y: y}
+
+      # safety check, exit if not moving
+      return if delta[:x] == 0 && delta[:y] == 0
+
+      if valid_move_deltas.any? { |d| d[:x] == delta[:x] && d[:y] == delta[:y] }
+        @x += delta[:x]
+        @y += delta[:y]
+
+        @x = @x.clamp(0, @x)
+        @y = @y.clamp(0, @y)
+      end
     end
 
     def animation(frame_time)
