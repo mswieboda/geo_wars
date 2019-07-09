@@ -1,5 +1,9 @@
 module GeoWars
   class Cursor
+    getter x : Int32
+    getter y : Int32
+    getter? selection
+
     SIZE_RATIO              =    8
     SIZE_RATIO_SHRINK       =    4
     SIZE_RATIO_SHRINK_TIMER = 0.75
@@ -11,13 +15,11 @@ module GeoWars
 
     CURSOR_COLOR = LibRay::BLACK
 
-    property x
-    property y
-
     @key_down_initial_timers : Hash(Symbol, Timer)
     @key_down_timers : Hash(Symbol, Timer)
 
-    def initialize(@x : Int32, @y : Int32)
+    def initialize(@x, @y)
+      @selection = false
       @key_down_initial_timers = Hash(Symbol, Timer).new
       @key_down_timers = Hash(Symbol, Timer).new
 
@@ -30,7 +32,25 @@ module GeoWars
       @size_ratio_shrink_timer = Timer.new(SIZE_RATIO_SHRINK_TIMER)
     end
 
-    def update(cell_width, cell_height, frame_time)
+    def update(cells_x, cells_y, frame_time)
+      selection_check
+      movement(cells_x, cells_y, frame_time)
+      animation(frame_time)
+    end
+
+    def selection_check
+      @selection = false
+
+      if LibRay.key_pressed?(LibRay::KEY_SPACE)
+        @selection = true
+      end
+    end
+
+    def selected?(x, y)
+      @x == x && @y == y
+    end
+
+    def movement(cells_x, cells_y, frame_time)
       @y -= 1 if LibRay.key_pressed?(LibRay::KEY_W)
       @x -= 1 if LibRay.key_pressed?(LibRay::KEY_A)
       @y += 1 if LibRay.key_pressed?(LibRay::KEY_S)
@@ -41,11 +61,13 @@ module GeoWars
       @y += 1 if keys_held?(frame_time, [LibRay::KEY_S, LibRay::KEY_DOWN], :down)
       @x += 1 if keys_held?(frame_time, [LibRay::KEY_D, LibRay::KEY_RIGHT], :right)
 
-      @x = @x.clamp(0, cell_width - 1)
-      @y = @y.clamp(0, cell_height - 1)
+      @x = @x.clamp(0, cells_x - 1)
+      @y = @y.clamp(0, cells_y - 1)
+    end
 
+    def animation(frame_time)
       @size_ratio_shrink_timer.increase(frame_time)
-      @size_ratio = @size_ratio_shrink_timer.percentage > 0.5 ? SIZE_RATIO_SHRINK : SIZE_RATIO
+      @size_ratio = @size_ratio_shrink_timer.toggle? ? SIZE_RATIO_SHRINK : SIZE_RATIO
       @size_ratio_shrink_timer.reset if @size_ratio_shrink_timer.done?
     end
 

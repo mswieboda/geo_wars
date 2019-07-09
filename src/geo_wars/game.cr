@@ -20,21 +20,20 @@ module GeoWars
 
     def run
       while !LibRay.window_should_close?
-        update
+        frame_time = LibRay.get_frame_time
+        update(frame_time)
         draw_init
       end
 
       close
     end
 
-    def update
-      @map.update
+    def update(frame_time)
+      @map.update(frame_time)
     end
 
     def draw
       @map.draw
-
-      LibRay.draw_fps(0, 0) if DRAW_FPS
     end
 
     def draw_init
@@ -43,6 +42,7 @@ module GeoWars
 
       draw
 
+      LibRay.draw_fps(0, 0) if DRAW_FPS
       LibRay.end_drawing
     end
 

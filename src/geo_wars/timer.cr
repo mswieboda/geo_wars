@@ -35,5 +35,9 @@ module GeoWars
     def percentage
       @time / @length
     end
+
+    def toggle?
+      percentage > 0.5
+    end
   end
 end
