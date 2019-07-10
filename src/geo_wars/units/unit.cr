@@ -4,6 +4,7 @@ module GeoWars
     getter y : Int32
     getter player : Player
     getter? selected
+    getter? disabled
 
     SIZE_RATIO = 0.5
 
@@ -14,6 +15,8 @@ module GeoWars
 
     MAX_MOVEMENT          = 3
     MOVEMENT_RADIUS_COLOR = LibRay::Color.new(r: 255, g: 255, b: 255, a: 125)
+
+    DISABLED_DARKNESS = 0.325
 
     def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT)
       @selected = false
@@ -49,12 +52,23 @@ module GeoWars
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 
+      color = player.color
+
+      if disabled?
+        color = LibRay::Color.new(
+          r: color.r * DISABLED_DARKNESS,
+          g: color.g * DISABLED_DARKNESS,
+          b: color.b * DISABLED_DARKNESS,
+          a: 255
+        )
+      end
+
       LibRay.draw_rectangle(
         pos_x: x + (viewport.cell_size - width) / 2,
         pos_y: y + (viewport.cell_size - height) / 2,
         width: width,
         height: height,
-        color: player.color
+        color: color
       )
 
       if selected?
@@ -152,12 +166,25 @@ module GeoWars
       @moves_relative.map { |move| move_absolute(move) }
     end
 
-    def move(x, y)
+    def jump_to(x, y)
       @x = x
       @y = y
     end
 
+    def move(x, y)
+      # TODO: animate allow selected path
+      jump_to(x, y)
+
+      disable unless can_attack?
+    end
+
+    def can_attack?
+      # TODO: not yet implemented
+    end
+
     def select(cells, cells_x, cells_y)
+      return if disabled?
+
       @selected = !@selected
 
       update_moves(cells, cells_x, cells_y)
@@ -165,6 +192,14 @@ module GeoWars
 
     def unselect
       @selected = false
+    end
+
+    def disable
+      @disabled = true
+    end
+
+    def enable
+      @disabled = false
     end
 
     def serialize

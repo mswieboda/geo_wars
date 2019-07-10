@@ -111,6 +111,10 @@ module GeoWars
       end
     end
 
+    def new_player_turn
+      @units.select(&.disabled?).each(&.enable)
+    end
+
     def draw
       @cells.each { |cell| cell.draw(@viewport) }
 

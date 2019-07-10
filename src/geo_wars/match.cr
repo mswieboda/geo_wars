@@ -35,7 +35,7 @@ module GeoWars
       @turn_measured = LibRay::Vector2.new
       @turn_position = LibRay::Vector2.new
 
-      turn_increase
+      new_turn
     end
 
     def update(frame_time)
@@ -43,7 +43,9 @@ module GeoWars
         new_index = @turn_player_index + 1
         @turn_player_index = new_index >= @players.size ? 0 : new_index
 
-        turn_increase if @turn_player_index == 0
+        @map.new_player_turn
+
+        new_turn if @turn_player_index == 0
 
         @map.turn_player = turn_player
       end
@@ -84,7 +86,7 @@ module GeoWars
       @players[@turn_player_index]
     end
 
-    def turn_increase
+    def new_turn
       @turn += 1
       @turn_text = "Turn #{@turn}"
       @turn_measured = LibRay.measure_text_ex(
