@@ -182,6 +182,12 @@ module GeoWars
       # TODO: not yet implemented
     end
 
+    def selectable?(turn_player)
+      return false if disabled?
+
+      player == turn_player
+    end
+
     def select(cells, cells_x, cells_y)
       return if disabled?
 

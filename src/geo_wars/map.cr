@@ -55,10 +55,9 @@ module GeoWars
       @viewport.update(@cursor, @cells_x, @cells_y)
 
       if @cursor.selection?
-        pre_selected_unit = @units.find { |unit| unit.player == turn_player && @cursor.selected?(unit.x, unit.y) }
+        pre_selected_unit = @units.find { |unit| unit.selectable?(turn_player) && @cursor.selected?(unit.x, unit.y) }
 
         if pre_selected_unit
-          @units.select { |u| u != pre_selected_unit && u.selected? }.each(&.unselect)
           pre_selected_unit.select(@cells, @cells_x, @cells_y)
         else
           @units.select(&.selected?).each(&.unselect)
