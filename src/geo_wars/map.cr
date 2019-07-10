@@ -1,3 +1,5 @@
+require "./units/*"
+
 module GeoWars
   class Map
     property cells : Array(MapCell)
@@ -17,9 +19,9 @@ module GeoWars
 
       @cursor = Cursor.new(3, 3)
 
-      @units = [] of Unit
-      @units << Unit.new(3, 3)
-      @units << Unit.new(5, 5)
+      @units = [] of Units::Unit
+      @units << Units::Soldier.new(3, 3)
+      @units << Units::Soldier.new(5, 5)
     end
 
     def update(frame_time)
@@ -29,6 +31,8 @@ module GeoWars
       selected_unit = @units.find { |unit| unit.selected? }
 
       if selected_unit
+        selected_unit.update_moves(@cells, @cells_x, @cells_y)
+
         valid_move_deltas.select! do |move|
           selected_unit.moves.any? do |unit_move|
             unit_move[:x] == @cursor.x + move[:x] && unit_move[:y] == @cursor.y + move[:y]
@@ -130,13 +134,13 @@ module GeoWars
       lines = File.read_lines("./build/maps/map.gw_map")
 
       @cells = Array(MapCell).new
-      @units = Array(Unit).new
+      @units = Array(Units::Unit).new
 
       lines.each do |line|
         if line.starts_with?("mc:")
           @cells << MapCell.deserialize(line)
         elsif line.starts_with?("u:")
-          @units << Unit.deserialize(line)
+          @units << Units::Unit.deserialize(line)
         end
       end
     end

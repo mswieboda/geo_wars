@@ -1,5 +1,5 @@
 module GeoWars
-  class Unit
+  class Units::Unit
     getter x : Int32
     getter y : Int32
     getter? selected
@@ -12,13 +12,15 @@ module GeoWars
     SELECTED_BORDER_SIZE_RATIO = 16
 
     MAX_MOVEMENT          = 3
-    MOVEMENT_RADIUS_COLOR = LibRay::Color.new(r: 255, g: 255, b: 255, a: 85)
+    MOVEMENT_RADIUS_COLOR = LibRay::Color.new(r: 255, g: 255, b: 255, a: 125)
 
-    def initialize(@x, @y)
+    def initialize(@x, @y, @max_movement = MAX_MOVEMENT)
       @selected = false
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
       @moves_relative = Array(NamedTuple(x: Int32, y: Int32)).new
-      @moves_relative = default_relative_moves
+      @moves_relative_default = Array(NamedTuple(x: Int32, y: Int32)).new
+      @moves_relative_default = default_relative_moves
+      @moves_relative = @moves_relative_default
     end
 
     def update(frame_time)
@@ -88,8 +90,8 @@ module GeoWars
     end
 
     def default_relative_moves
-      (-MAX_MOVEMENT..MAX_MOVEMENT).to_a.flat_map do |x|
-        max = MAX_MOVEMENT - x.abs
+      (-@max_movement..@max_movement).to_a.flat_map do |x|
+        max = @max_movement - x.abs
 
         (-max..max).to_a.flat_map do |y|
           {x: x, y: y}
@@ -97,8 +99,20 @@ module GeoWars
       end
     end
 
+    def update_moves(cells, cells_x, cells_y)
+      @moves_relative = @moves_relative_default.select do |move_realtive|
+        move = move_absolute(move_realtive)
+
+        move[:x] >= 0 && move[:x] < cells_x && move[:y] >= 0 && move[:y] < cells_y
+      end
+    end
+
+    def move_absolute(move)
+      {x: move[:x] + @x, y: move[:y] + @y}
+    end
+
     def moves
-      @moves_relative.map { |move| {x: move[:x] + @x, y: move[:y] + @y} }
+      @moves_relative.map { |move| move_absolute(move) }
     end
 
     def move(x, y)
@@ -120,7 +134,7 @@ module GeoWars
 
     def self.deserialize(line)
       x, y = line.split(":").last.split(",").map(&.to_i)
-      Unit.new(x, y)
+      Units::Soldier.new(x, y)
     end
   end
 end
