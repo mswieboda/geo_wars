@@ -1,6 +1,7 @@
 module GeoWars
   enum Terrain
     Field
+    Forest
     Road
     Water
     Mountain
@@ -8,6 +9,8 @@ module GeoWars
     def color
       case self
       when Field
+        LibRay::GREEN
+      when Forest
         LibRay::DARKGREEN
       when Road
         LibRay::GRAY
@@ -24,12 +27,14 @@ module GeoWars
       case self
       when Field
         1
+      when Forest
+        2
       when Road
         1
       when Water
         0
       when Mountain
-        2
+        3
       else
         0
       end

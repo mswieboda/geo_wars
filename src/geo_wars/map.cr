@@ -75,9 +75,10 @@ module GeoWars
       export_map if LibRay.key_pressed?(LibRay::KEY_F3)
 
       set_terrain(Terrain::Field) if LibRay.key_down?(LibRay::KEY_ONE)
-      set_terrain(Terrain::Road) if LibRay.key_down?(LibRay::KEY_TWO)
-      set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_THREE)
-      set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FOUR)
+      set_terrain(Terrain::Forest) if LibRay.key_down?(LibRay::KEY_TWO)
+      set_terrain(Terrain::Road) if LibRay.key_down?(LibRay::KEY_THREE)
+      set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_FOUR)
+      set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FIVE)
       flip_terrain if LibRay.key_pressed?(Game::KEY_TILDE)
     end
 
@@ -100,7 +101,7 @@ module GeoWars
     def draw
       @cells.each { |cell| cell.draw(@viewport) }
 
-      @units.each { |unit| unit.draw(@viewport, LibRay::GREEN) }
+      @units.each { |unit| unit.draw(@viewport, LibRay::MAGENTA) }
 
       @cursor.draw(@viewport)
       @viewport.draw
