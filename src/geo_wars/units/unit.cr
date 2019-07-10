@@ -118,6 +118,9 @@ module GeoWars
             if terrain_moves > 0
               child_moves_left -= terrain_moves
               moveable = child_moves_left > 0
+
+              # don't pass through a mountain in one whole move
+              child_moves_left = 0 unless cell.terrain.passable?
             else
               moveable = false
             end

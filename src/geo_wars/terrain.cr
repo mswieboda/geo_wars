@@ -40,6 +40,10 @@ module GeoWars
       end
     end
 
+    def passable?
+      self != Mountain
+    end
+
     def self.random
       Terrain.values.sample
     end
