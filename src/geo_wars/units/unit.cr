@@ -94,28 +94,46 @@ module GeoWars
     end
 
     def update_moves(cells, cells_x, cells_y)
-      @moves_relative = @moves_relative_initial.select do |move_realtive|
-        moves = @max_movement
-        move = move_absolute(move_realtive)
-        cell = cells.find { |c| c.x == move[:x] && c.y == move[:y] }
+      # TODO: not sure why it should be @max_movement + 1, check into this
+      @moves_relative = add_moves(@moves_relative_initial, @max_movement + 1, cells, cells_x, cells_y)
+    end
 
-        if cell
-          in_bounds = move[:x] >= 0 && move[:x] < cells_x && move[:y] >= 0 && move[:y] < cells_y
+    def add_moves(moves, moves_left, cells, cells_x, cells_y)
+      child_moves = [] of NamedTuple(x: Int32, y: Int32)
 
-          terrain_moves = terrain_moves(cell.terrain)
+      return child_moves if moves_left <= 0 || moves.empty?
 
-          if terrain_moves > 0
-            moves -= terrain_moves
-            moveable = moves > 0
-          else
-            moveable = false
+      moves.each do |move_relative|
+        child_moves_left = moves_left
+        move = move_absolute(move_relative)
+
+        in_bounds = move[:x] >= 0 && move[:x] < cells_x && move[:y] >= 0 && move[:y] < cells_y
+
+        if in_bounds
+          cell = cells.find { |c| c.x == move[:x] && c.y == move[:y] }
+
+          if cell
+            terrain_moves = terrain_moves(cell.terrain)
+
+            if terrain_moves > 0
+              child_moves_left -= terrain_moves
+              moveable = child_moves_left > 0
+            else
+              moveable = false
+            end
+
+            if moveable
+              child_moves << move_relative
+
+              more_moves = @moves_relative_initial.map { |m| {x: m[:x] + move_relative[:x], y: m[:y] + move_relative[:y]} }
+
+              child_moves += add_moves(more_moves, child_moves_left, cells, cells_x, cells_y).uniq
+            end
           end
-
-          in_bounds && moveable
-        else
-          false
         end
       end
+
+      return child_moves.uniq
     end
 
     def terrain_moves(terrain)
