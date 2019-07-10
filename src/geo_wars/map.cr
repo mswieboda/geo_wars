@@ -2,46 +2,39 @@ require "./units/*"
 
 module GeoWars
   class Map
-    property cells : Array(MapCell)
+    property turn_player : Player
     getter? editing
 
+    @cells : Array(MapCell)
     @cells_x : Int32
     @cells_y : Int32
+    @players : Array(Player)
 
     DEFAULT_CELL_SIZE = 64
 
     POSSIBLE_MOVES = (-1..1).flat_map { |x| (-1..1).map { |y| {x: x, y: y} } }.select { |move| !(move[:x] == 0 && move[:y] == 0) }
 
-    def initialize(@cells_x, @cells_y, width = Game::SCREEN_WIDTH, height = Game::SCREEN_HEIGHT, cell_size = DEFAULT_CELL_SIZE)
+    def initialize(@cells_x, @cells_y, @players, width = Game::SCREEN_WIDTH, height = Game::SCREEN_HEIGHT, cell_size = DEFAULT_CELL_SIZE)
       @viewport = MapViewport.new(width: width, height: height, cell_size: cell_size)
 
       @cells = Array.new(@cells_x) { |x| Array.new(@cells_y) { |y| MapCell.new(x, y, Terrain.random) } }.flatten
-
-      @cursor = Cursor.new(3, 3)
-
-      @turn_player_index = 0
-      @players = [] of Player
-      player = Player.new(
-        color: LibRay::RED
-      )
-      @players << player
-
-      player_2 = Player.new(
-        color: LibRay::DARKBLUE
-      )
-      @players << player_2
-
       @units = [] of Units::Unit
 
-      @units << Units::Soldier.new(3, 3, player)
-      @units << Units::Soldier.new(5, 5, player)
+      # testing cursor and units
+      @cursor = Cursor.new(3, 3)
 
-      @units << Units::Soldier.new(13, 3, player_2)
-      @units << Units::Soldier.new(15, 5, player_2)
-    end
+      @turn_player = Player.new(color: LibRay::MAGENTA)
 
-    def turn_player
-      @players[@turn_player_index]
+      if @players.size > 0
+        @turn_player = @players[0]
+        @units << Units::Soldier.new(3, 3, @players[0])
+        @units << Units::Soldier.new(5, 5, @players[0])
+      end
+
+      if @players.size > 1
+        @units << Units::Soldier.new(13, 3, @players[1])
+        @units << Units::Soldier.new(15, 5, @players[1])
+      end
     end
 
     def update(frame_time)
@@ -82,11 +75,6 @@ module GeoWars
       end
 
       @units.each { |unit| unit.update(frame_time) }
-
-      if LibRay.key_pressed?(Game::INPUT_CANCEL)
-        new_index = @turn_player_index + 1
-        @turn_player_index = new_index >= @players.size ? 0 : new_index
-      end
 
       editor_update(frame_time)
     end
@@ -166,7 +154,7 @@ module GeoWars
           @cells << MapCell.deserialize(line)
         elsif line.starts_with?("u:")
           # TODO: need to serialize and deserialize player object info
-          @units << Units::Unit.deserialize(line, turn_player)
+          @units << Units::Unit.deserialize(line, @players[0])
         end
       end
     end
