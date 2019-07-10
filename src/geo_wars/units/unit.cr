@@ -2,6 +2,7 @@ module GeoWars
   class Units::Unit
     getter x : Int32
     getter y : Int32
+    getter player : Player
     getter? selected
 
     SIZE_RATIO = 0.5
@@ -14,7 +15,7 @@ module GeoWars
     MAX_MOVEMENT          = 3
     MOVEMENT_RADIUS_COLOR = LibRay::Color.new(r: 255, g: 255, b: 255, a: 125)
 
-    def initialize(@x, @y, @max_movement = MAX_MOVEMENT)
+    def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT)
       @selected = false
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
       @moves_relative = Array(NamedTuple(x: Int32, y: Int32)).new
@@ -37,7 +38,7 @@ module GeoWars
       end
     end
 
-    def draw(viewport, color)
+    def draw(viewport)
       width = viewport.cell_size * SIZE_RATIO
       height = viewport.cell_size * SIZE_RATIO
 
@@ -53,7 +54,7 @@ module GeoWars
         pos_y: y + (viewport.cell_size - height) / 2,
         width: width,
         height: height,
-        color: color
+        color: player.color
       )
 
       if selected?
@@ -170,9 +171,9 @@ module GeoWars
       "u:#{@x},#{@y}"
     end
 
-    def self.deserialize(line)
+    def self.deserialize(line, player)
       x, y = line.split(":").last.split(",").map(&.to_i)
-      Units::Soldier.new(x, y)
+      Units::Soldier.new(x, y, player)
     end
   end
 end

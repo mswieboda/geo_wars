@@ -19,9 +19,29 @@ module GeoWars
 
       @cursor = Cursor.new(3, 3)
 
+      @turn_player_index = 0
+      @players = [] of Player
+      player = Player.new(
+        color: LibRay::RED
+      )
+      @players << player
+
+      player_2 = Player.new(
+        color: LibRay::DARKBLUE
+      )
+      @players << player_2
+
       @units = [] of Units::Unit
-      @units << Units::Soldier.new(3, 3)
-      @units << Units::Soldier.new(5, 5)
+
+      @units << Units::Soldier.new(3, 3, player)
+      @units << Units::Soldier.new(5, 5, player)
+
+      @units << Units::Soldier.new(13, 3, player_2)
+      @units << Units::Soldier.new(15, 5, player_2)
+    end
+
+    def turn_player
+      @players[@turn_player_index]
     end
 
     def update(frame_time)
@@ -42,7 +62,7 @@ module GeoWars
       @viewport.update(@cursor, @cells_x, @cells_y)
 
       if @cursor.selection?
-        pre_selected_unit = @units.find { |unit| @cursor.selected?(unit.x, unit.y) }
+        pre_selected_unit = @units.find { |unit| unit.player == turn_player && @cursor.selected?(unit.x, unit.y) }
 
         if pre_selected_unit
           @units.select { |u| u != pre_selected_unit && u.selected? }.each(&.unselect)
@@ -62,6 +82,11 @@ module GeoWars
       end
 
       @units.each { |unit| unit.update(frame_time) }
+
+      if LibRay.key_pressed?(Game::INPUT_CANCEL)
+        new_index = @turn_player_index + 1
+        @turn_player_index = new_index >= @players.size ? 0 : new_index
+      end
 
       editor_update(frame_time)
     end
@@ -101,7 +126,7 @@ module GeoWars
     def draw
       @cells.each { |cell| cell.draw(@viewport) }
 
-      @units.each { |unit| unit.draw(@viewport, LibRay::MAGENTA) }
+      @units.each { |unit| unit.draw(@viewport) }
 
       @cursor.draw(@viewport)
       @viewport.draw
@@ -120,6 +145,7 @@ module GeoWars
     def export_map
       puts "export_map!"
       cells = @cells.map(&.serialize).join("\n")
+      # TODO: need to serialize and deserialize player object info
       units = @units.map(&.serialize).join("\n")
       map = [cells, units].join("\n")
 
@@ -139,7 +165,8 @@ module GeoWars
         if line.starts_with?("mc:")
           @cells << MapCell.deserialize(line)
         elsif line.starts_with?("u:")
-          @units << Units::Unit.deserialize(line)
+          # TODO: need to serialize and deserialize player object info
+          @units << Units::Unit.deserialize(line, turn_player)
         end
       end
     end
