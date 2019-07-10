@@ -18,9 +18,13 @@ module GeoWars
       @selected = false
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
       @moves_relative = Array(NamedTuple(x: Int32, y: Int32)).new
-      @moves_relative_default = Array(NamedTuple(x: Int32, y: Int32)).new
-      @moves_relative_default = default_relative_moves
-      @moves_relative = @moves_relative_default
+      @moves_relative_initial = [
+        {x: 0, y: -1},
+        {x: -1, y: 0},
+        {x: 0, y: 0},
+        {x: 0, y: 1},
+        {x: 1, y: 0},
+      ]
     end
 
     def update(frame_time)
@@ -89,22 +93,33 @@ module GeoWars
       end
     end
 
-    def default_relative_moves
-      (-@max_movement..@max_movement).to_a.flat_map do |x|
-        max = @max_movement - x.abs
+    def update_moves(cells, cells_x, cells_y)
+      @moves_relative = @moves_relative_initial.select do |move_realtive|
+        moves = @max_movement
+        move = move_absolute(move_realtive)
+        cell = cells.find { |c| c.x == move[:x] && c.y == move[:y] }
 
-        (-max..max).to_a.flat_map do |y|
-          {x: x, y: y}
+        if cell
+          in_bounds = move[:x] >= 0 && move[:x] < cells_x && move[:y] >= 0 && move[:y] < cells_y
+
+          terrain_moves = terrain_moves(cell.terrain)
+
+          if terrain_moves > 0
+            moves -= terrain_moves
+            moveable = moves > 0
+          else
+            moveable = false
+          end
+
+          in_bounds && moveable
+        else
+          false
         end
       end
     end
 
-    def update_moves(cells, cells_x, cells_y)
-      @moves_relative = @moves_relative_default.select do |move_realtive|
-        move = move_absolute(move_realtive)
-
-        move[:x] >= 0 && move[:x] < cells_x && move[:y] >= 0 && move[:y] < cells_y
-      end
+    def terrain_moves(terrain)
+      terrain.moves
     end
 
     def move_absolute(move)
@@ -120,8 +135,10 @@ module GeoWars
       @y = y
     end
 
-    def select
+    def select(cells, cells_x, cells_y)
       @selected = !@selected
+
+      update_moves(cells, cells_x, cells_y)
     end
 
     def unselect

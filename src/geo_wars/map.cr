@@ -31,8 +31,6 @@ module GeoWars
       selected_unit = @units.find { |unit| unit.selected? }
 
       if selected_unit
-        selected_unit.update_moves(@cells, @cells_x, @cells_y)
-
         valid_move_deltas.select! do |move|
           selected_unit.moves.any? do |unit_move|
             unit_move[:x] == @cursor.x + move[:x] && unit_move[:y] == @cursor.y + move[:y]
@@ -48,7 +46,7 @@ module GeoWars
 
         if pre_selected_unit
           @units.select { |u| u != pre_selected_unit && u.selected? }.each(&.unselect)
-          pre_selected_unit.select
+          pre_selected_unit.select(@cells, @cells_x, @cells_y)
         else
           @units.select(&.selected?).each(&.unselect)
         end
