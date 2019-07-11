@@ -179,17 +179,25 @@ module GeoWars
       path = "./build/maps/#{map_file}.gw_map"
       lines = File.read_lines(path)
 
-      @cells = Array(MapCell).new
-      @units = Array(Units::Unit).new
+      cursor = nil
+      cells = Array(MapCell).new
+      units = Array(Units::Unit).new
 
       lines.each do |line|
         if line.starts_with?("mc")
-          @cells << MapCell.deserialize(line)
+          cells << MapCell.deserialize(line)
         elsif line.starts_with?("u")
-          @units << Units::Unit.deserialize(line, @players)
+          units << Units::Unit.deserialize(line, @players)
         elsif line.starts_with?("c")
-          @cursor = Cursor.deserialize(line)
+          cursor = Cursor.deserialize(line)
         end
+      end
+
+      @cells = cells
+      @units = units
+
+      if cursor
+        @cursor = cursor
       end
 
       puts "map loaded! #{path}"
