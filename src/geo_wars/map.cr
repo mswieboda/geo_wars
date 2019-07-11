@@ -67,7 +67,7 @@ module GeoWars
       end
 
       if selected_unit
-        if LibRay.key_pressed?(Game::INPUT_ACCEPT)
+        if Keys.pressed?(Keys::ACCEPT)
           selected_unit.move(@cursor.x, @cursor.y)
           selected_unit.unselect
         end
@@ -79,19 +79,19 @@ module GeoWars
     end
 
     def editor_update(frame_time)
-      @editing = !@editing if LibRay.key_pressed?(LibRay::KEY_F1)
+      @editing = !@editing if Keys.pressed?(LibRay::KEY_F1)
 
       return unless editing?
 
-      import_map if LibRay.key_pressed?(LibRay::KEY_F2)
-      export_map if LibRay.key_pressed?(LibRay::KEY_F3)
+      import_map if Keys.pressed?(LibRay::KEY_F2)
+      export_map if Keys.pressed?(LibRay::KEY_F3)
 
-      set_terrain(Terrain::Field) if LibRay.key_down?(LibRay::KEY_ONE)
-      set_terrain(Terrain::Forest) if LibRay.key_down?(LibRay::KEY_TWO)
-      set_terrain(Terrain::Road) if LibRay.key_down?(LibRay::KEY_THREE)
-      set_terrain(Terrain::Water) if LibRay.key_down?(LibRay::KEY_FOUR)
-      set_terrain(Terrain::Mountain) if LibRay.key_down?(LibRay::KEY_FIVE)
-      flip_terrain if LibRay.key_pressed?(Game::KEY_TILDE)
+      set_terrain(Terrain::Field) if Keys.down?(LibRay::KEY_ONE)
+      set_terrain(Terrain::Forest) if Keys.down?(LibRay::KEY_TWO)
+      set_terrain(Terrain::Road) if Keys.down?(LibRay::KEY_THREE)
+      set_terrain(Terrain::Water) if Keys.down?(LibRay::KEY_FOUR)
+      set_terrain(Terrain::Mountain) if Keys.down?(LibRay::KEY_FIVE)
+      flip_terrain if Keys.pressed?(Keys::TILDE)
     end
 
     def flip_terrain

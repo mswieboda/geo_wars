@@ -16,17 +16,17 @@ module GeoWars
 
     CURSOR_COLOR = LibRay::BLACK
 
-    @key_down_initial_timers : Hash(Symbol, Timer)
-    @key_down_timers : Hash(Symbol, Timer)
+    @key_hold_initial_timers : Hash(Symbol, Timer)
+    @key_hold_timers : Hash(Symbol, Timer)
 
     def initialize(@x, @y)
       @selection = false
-      @key_down_initial_timers = Hash(Symbol, Timer).new
-      @key_down_timers = Hash(Symbol, Timer).new
+      @key_hold_initial_timers = Hash(Symbol, Timer).new
+      @key_hold_timers = Hash(Symbol, Timer).new
 
       [:up, :left, :down, :right].each do |key|
-        @key_down_initial_timers[key] = Timer.new(KEY_DOWN_TIMER)
-        @key_down_timers[key] = Timer.new(KEY_DOWN_TIMER)
+        @key_hold_initial_timers[key] = Timer.new(KEY_DOWN_TIMER)
+        @key_hold_timers[key] = Timer.new(KEY_DOWN_TIMER)
       end
 
       @size_ratio = SIZE_RATIO
@@ -42,11 +42,11 @@ module GeoWars
     def selection_check
       @selection = @selection_cancel = false
 
-      if LibRay.key_pressed?(Game::INPUT_ACCEPT)
+      if Keys.pressed?(Keys::ACCEPT)
         @selection = true
       end
 
-      if LibRay.key_pressed?(Game::INPUT_CANCEL)
+      if Keys.pressed?(Keys::CANCEL)
         @selection_cancel = true
       end
     end
@@ -58,10 +58,10 @@ module GeoWars
     def movement(frame_time, valid_move_deltas)
       x = y = 0
 
-      y -= 1 if keys_held?(frame_time, [LibRay::KEY_W, LibRay::KEY_UP], :up)
-      x -= 1 if keys_held?(frame_time, [LibRay::KEY_A, LibRay::KEY_LEFT], :left)
-      y += 1 if keys_held?(frame_time, [LibRay::KEY_S, LibRay::KEY_DOWN], :down)
-      x += 1 if keys_held?(frame_time, [LibRay::KEY_D, LibRay::KEY_RIGHT], :right)
+      y -= 1 if Keys.pressed_or_held?(frame_time, [LibRay::KEY_W, LibRay::KEY_UP], @key_hold_initial_timers[:up], @key_hold_timers[:up])
+      x -= 1 if Keys.pressed_or_held?(frame_time, [LibRay::KEY_A, LibRay::KEY_LEFT], @key_hold_initial_timers[:left], @key_hold_timers[:left])
+      y += 1 if Keys.pressed_or_held?(frame_time, [LibRay::KEY_S, LibRay::KEY_DOWN], @key_hold_initial_timers[:down], @key_hold_timers[:down])
+      x += 1 if Keys.pressed_or_held?(frame_time, [LibRay::KEY_D, LibRay::KEY_RIGHT], @key_hold_initial_timers[:right], @key_hold_timers[:right])
 
       delta = {x: x, y: y}
 
@@ -101,27 +101,6 @@ module GeoWars
           color: CURSOR_COLOR
         )
       end
-    end
-
-    def keys_held?(frame_time, keys, timer_key)
-      return true if keys.any? { |key| LibRay.key_pressed?(key) }
-
-      if keys.any? { |key| LibRay.key_down?(key) }
-        @key_down_initial_timers[timer_key].increase(frame_time)
-
-        if @key_down_initial_timers[timer_key].done?
-          @key_down_timers[timer_key].increase(frame_time)
-
-          if @key_down_timers[timer_key].done?
-            @key_down_timers[timer_key].reset
-            return true
-          end
-        end
-      elsif keys.any? { |key| LibRay.key_released?(key) }
-        @key_down_initial_timers[timer_key].reset
-      end
-
-      false
     end
   end
 end

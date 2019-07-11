@@ -2,23 +2,23 @@ module GeoWars
   class Timer
     getter time : Float32
     getter length : Float64 | Float32 | Int32
-    getter? active
+    getter? started
 
     def initialize(@length : Float64 | Float32 | Int32)
-      @active = false
+      @started = false
       @time = 0_f32
     end
 
     def start
-      @active = true
+      @started = true
     end
 
     def done?
-      active? && @time >= @length
+      started? && @time >= @length
     end
 
     def reset
-      @active = false
+      @started = false
       @time = 0_f32
     end
 
@@ -28,7 +28,7 @@ module GeoWars
     end
 
     def increase(delta_t : Float32)
-      start unless active?
+      start unless started?
       @time += delta_t
     end
 
