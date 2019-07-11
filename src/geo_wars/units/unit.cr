@@ -171,9 +171,13 @@ module GeoWars
       @y = y
     end
 
-    def move(x, y)
+    def move(cell)
+      return false if cell.unit?
+
+      cell.unit = self
+
       # TODO: animate allow selected path
-      jump_to(x, y)
+      jump_to(cell.x, cell.y)
 
       disable unless can_attack?
     end

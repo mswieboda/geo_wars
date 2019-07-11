@@ -5,9 +5,11 @@ module GeoWars
 
     getter x : Int32
     getter y : Int32
+    property unit : Units::Unit | Nil
     property terrain : Terrain
 
     def initialize(@x, @y, @terrain)
+      @unit = nil
     end
 
     def update
@@ -55,6 +57,14 @@ module GeoWars
       terrain = Terrain.new(values[2])
 
       MapCell.new(x, y, terrain)
+    end
+
+    def unit?
+      !!@unit
+    end
+
+    def clear_unit
+      @unit = nil
     end
   end
 end

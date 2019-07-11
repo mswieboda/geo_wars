@@ -32,6 +32,7 @@ module GeoWars
       end
 
       if @players.size > 1
+        @units << Units::Soldier.new(4, 4, @players[1])
         @units << Units::Soldier.new(13, 3, @players[1])
         @units << Units::Soldier.new(15, 5, @players[1])
       end
@@ -68,8 +69,11 @@ module GeoWars
 
       if selected_unit
         if Keys.pressed?(Keys::ACCEPT)
-          selected_unit.move(@cursor.x, @cursor.y)
-          selected_unit.unselect
+          cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
+
+          if cell && selected_unit.move(cell)
+            selected_unit.unselect
+          end
         end
       end
 
