@@ -212,13 +212,31 @@ module GeoWars
       @disabled = false
     end
 
-    def serialize
-      "u:#{@x},#{@y}"
+    def serialize(players)
+      player_index = players.index(player)
+
+      class_info = Map.serialize_class_info(self)
+      object_info = "#{@x},#{@y},#{player_index}"
+
+      "#{class_info};#{object_info}"
     end
 
-    def self.deserialize(line, player)
-      x, y = line.split(":").last.split(",").map(&.to_i)
-      Units::Soldier.new(x, y, player)
+    def self.deserialize(line, players)
+      class_info, obj_info = line.split(";")
+      x, y, player_index = obj_info.split(",").map(&.to_i)
+
+      unless class_info.starts_with?("u:")
+        raise "Error: not a serialized Unit, data line: #{line}"
+      end
+
+      sub_class_info = class_info.split(":").last
+
+      case sub_class_info
+      when .starts_with?("s")
+        Units::Soldier.new(x, y, players[player_index])
+      else
+        Units::Unit.new(x, y, players[player_index])
+      end
     end
   end
 end

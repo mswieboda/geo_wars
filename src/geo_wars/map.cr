@@ -36,6 +36,8 @@ module GeoWars
         @units << Units::Soldier.new(13, 3, @players[1])
         @units << Units::Soldier.new(15, 5, @players[1])
       end
+
+      update_cells
     end
 
     def update(frame_time)
@@ -80,6 +82,18 @@ module GeoWars
       @units.each { |unit| unit.update(frame_time) }
 
       editor_update(frame_time)
+    end
+
+    def update_cells
+      @cells.select(&.unit?).each(&.clear_unit)
+
+      @cells.each do |cell|
+        unit = @units.find { |u| u.x == cell.x && u.y == cell.y }
+
+        if unit
+          cell.unit = unit
+        end
+      end
     end
 
     def editor_update(frame_time)
@@ -140,8 +154,7 @@ module GeoWars
     def export_map
       puts "export_map!"
       cells = @cells.map(&.serialize).join("\n")
-      # TODO: need to serialize and deserialize player object info
-      units = @units.map(&.serialize).join("\n")
+      units = @units.map { |u| u.serialize(@players) }.join("\n")
       map = [cells, units].join("\n")
 
       Dir.mkdir("./build") unless File.exists?("./build")
@@ -157,13 +170,25 @@ module GeoWars
       @units = Array(Units::Unit).new
 
       lines.each do |line|
-        if line.starts_with?("mc:")
+        if line.starts_with?("mc")
           @cells << MapCell.deserialize(line)
-        elsif line.starts_with?("u:")
-          # TODO: need to serialize and deserialize player object info
-          @units << Units::Unit.deserialize(line, @players[0])
+        elsif line.starts_with?("u")
+          @units << Units::Unit.deserialize(line, @players)
         end
       end
+
+      update_cells
+    end
+
+    def self.serialize_class_info(obj)
+      obj
+        .class
+        .name
+        .sub("GeoWars::", "")
+        .underscore
+        .split("::")
+        .map { |class_name| class_name.underscore.split("_").map { |camel_case_section| camel_case_section[0] }.join("") }
+        .join(":")
     end
   end
 end

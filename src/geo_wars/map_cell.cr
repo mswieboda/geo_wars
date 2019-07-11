@@ -46,11 +46,20 @@ module GeoWars
     end
 
     def serialize
-      "mc:#{@x},#{@y},#{@terrain.value}"
+      class_info = Map.serialize_class_info(self)
+      object_info = "#{@x},#{@y},#{@terrain.value}"
+
+      "#{class_info};#{@x},#{@y},#{@terrain.value}"
     end
 
     def self.deserialize(line)
-      values = line.split(":").last.split(",").map(&.to_i)
+      class_info, object_info = line.split(";")
+
+      unless class_info.starts_with?("mc")
+        raise "Error: not a serialized MapCell, data line: #{line}"
+      end
+
+      values = object_info.split(",").map(&.to_i)
 
       x = values[0]
       y = values[1]
