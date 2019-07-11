@@ -102,5 +102,23 @@ module GeoWars
         )
       end
     end
+
+    def serialize
+      class_info = Map.serialize_class_info(self)
+      object_info = "#{@x},#{@y}"
+
+      "#{class_info};#{object_info}"
+    end
+
+    def self.deserialize(line)
+      class_info, obj_info = line.split(";")
+      x, y = obj_info.split(",").map(&.to_i)
+
+      unless class_info.starts_with?("c")
+        raise "Error: not a serialized Cursor, data line: #{line}"
+      end
+
+      Cursor.new(x, y)
+    end
   end
 end

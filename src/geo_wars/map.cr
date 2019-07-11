@@ -14,30 +14,34 @@ module GeoWars
 
     POSSIBLE_MOVES = (-1..1).flat_map { |x| (-1..1).map { |y| {x: x, y: y} } }.select { |move| !(move[:x] == 0 && move[:y] == 0) }
 
-    def initialize(@cells_x, @cells_y, @players, width = Game::SCREEN_WIDTH, height = Game::SCREEN_HEIGHT, cell_size = DEFAULT_CELL_SIZE)
+    def initialize(@cells_x, @cells_y, @players, width = Game::SCREEN_WIDTH, height = Game::SCREEN_HEIGHT, cell_size = DEFAULT_CELL_SIZE, map_file = "map")
       @viewport = MapViewport.new(width: width, height: height, cell_size: cell_size)
 
       @cells = Array.new(@cells_x) { |x| Array.new(@cells_y) { |y| MapCell.new(x, y, Terrain.random) } }.flatten
       @units = [] of Units::Unit
 
-      # testing cursor and units
-      @cursor = Cursor.new(3, 3)
+      @cursor = Cursor.new(0, 0)
 
       @turn_player = Player.new(color: LibRay::MAGENTA)
 
       if @players.size > 0
         @turn_player = @players[0]
-        @units << Units::Soldier.new(3, 3, @players[0])
-        @units << Units::Soldier.new(5, 5, @players[0])
       end
 
-      if @players.size > 1
-        @units << Units::Soldier.new(4, 4, @players[1])
-        @units << Units::Soldier.new(13, 3, @players[1])
-        @units << Units::Soldier.new(15, 5, @players[1])
-      end
+      begin
+        load(map_file)
+      rescue
+        if @players.size > 0
+          @units << Units::Soldier.new(3, 3, @players[0])
+          @units << Units::Soldier.new(5, 5, @players[0])
+        end
 
-      update_cells
+        if @players.size > 1
+          @units << Units::Soldier.new(4, 4, @players[1])
+          @units << Units::Soldier.new(13, 3, @players[1])
+          @units << Units::Soldier.new(15, 5, @players[1])
+        end
+      end
     end
 
     def update(frame_time)
@@ -101,8 +105,8 @@ module GeoWars
 
       return unless editing?
 
-      import_map if Keys.pressed?(LibRay::KEY_F2)
-      export_map if Keys.pressed?(LibRay::KEY_F3)
+      load if Keys.pressed?(LibRay::KEY_F2)
+      save if Keys.pressed?(LibRay::KEY_F3)
 
       set_terrain(Terrain::Field) if Keys.down?(LibRay::KEY_ONE)
       set_terrain(Terrain::Forest) if Keys.down?(LibRay::KEY_TWO)
@@ -157,20 +161,25 @@ module GeoWars
       end
     end
 
-    def export_map
-      puts "export_map!"
+    def save(map_file = "map")
+      path = "./build/maps/#{map_file}.gw_map"
+
       cells = @cells.map(&.serialize).join("\n")
       units = @units.map { |u| u.serialize(@players) }.join("\n")
-      map = [cells, units].join("\n")
+      cursor = @cursor.serialize
+      map_data = [cells, units, cursor].join("\n")
 
       Dir.mkdir("./build") unless File.exists?("./build")
       Dir.mkdir("./build/maps") unless File.exists?("./build/maps")
-      File.write("./build/maps/map.gw_map", map)
+
+      file = File.write(path, map_data)
+
+      puts "map saved! #{path}"
     end
 
-    def import_map
-      puts "import_map!"
-      lines = File.read_lines("./build/maps/map.gw_map")
+    def load(map_file = "map")
+      path = "./build/maps/#{map_file}.gw_map"
+      lines = File.read_lines(path)
 
       @cells = Array(MapCell).new
       @units = Array(Units::Unit).new
@@ -180,8 +189,12 @@ module GeoWars
           @cells << MapCell.deserialize(line)
         elsif line.starts_with?("u")
           @units << Units::Unit.deserialize(line, @players)
+        elsif line.starts_with?("c")
+          @cursor = Cursor.deserialize(line)
         end
       end
+
+      puts "map loaded! #{path}"
 
       update_cells
     end
