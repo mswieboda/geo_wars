@@ -47,8 +47,6 @@ module GeoWars
 
       return unless viewport.viewable_cell?(@x, @y, width, height)
 
-      draw_movement_radius(viewport) if selected?
-
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 

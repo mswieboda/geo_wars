@@ -41,10 +41,10 @@ module GeoWars
     end
 
     def update(frame_time)
-      # valid move delta from map boundaries
-      valid_move_deltas = POSSIBLE_MOVES.select { |move| @cursor.x + move[:x] < @cells_x && @cursor.y + move[:y] < @cells_y }
+      selected_unit = @units.find(&.selected?)
 
-      selected_unit = @units.find { |unit| unit.selected? }
+      # valid move delta, removing out of map boundaries (negative values already clamped in Cursor#movement)
+      valid_move_deltas = POSSIBLE_MOVES.select { |m| @cursor.x + m[:x] < @cells_x && @cursor.y + m[:y] < @cells_y }
 
       if selected_unit
         # set valid moves for the cursor, within the selected unit's move radius
@@ -134,6 +134,12 @@ module GeoWars
 
     def draw
       @cells.each { |cell| cell.draw(@viewport) }
+
+      selected_unit = @units.find(&.selected?)
+
+      if selected_unit
+        selected_unit.draw_movement_radius(@viewport)
+      end
 
       @units.each { |unit| unit.draw(@viewport) }
 
