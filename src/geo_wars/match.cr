@@ -48,6 +48,9 @@ module GeoWars
 
     def update(frame_time)
       if Keys.held?(frame_time, Keys::CANCEL, @next_turn_key_hold_initial_timer, @next_turn_key_hold_timer)
+        @next_turn_key_hold_timer.reset
+        @next_turn_key_hold_initial_timer.reset
+
         new_index = @turn_player_index + 1
         @turn_player_index = new_index >= @players.size ? 0 : new_index
 

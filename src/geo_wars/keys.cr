@@ -11,7 +11,7 @@ module GeoWars
     end
 
     def self.held?(frame_time, keys : Array(Int32), initial_timer, hold_timer)
-      if keys.any? { |key| down?(key) }
+      if keys.any? { |key| pressed?(key) } || initial_timer.started? && keys.any? { |key| down?(key) }
         initial_timer.increase(frame_time)
 
         if initial_timer.done?
@@ -31,15 +31,13 @@ module GeoWars
     end
 
     def self.pressed_or_held?(frame_time, key : Int32, initial_timer, hold_timer)
-      return true if pressed?(key)
-
-      held?(frame_time, key, initial_timer, hold_timer)
+      pressed_or_held?(frame_time, [key], initial_timer, hold_timer)
     end
 
     def self.pressed_or_held?(frame_time, keys : Array(Int32), initial_timer, hold_timer)
-      return true if pressed?(keys)
+      held = held?(frame_time, keys, initial_timer, hold_timer)
 
-      held?(frame_time, keys, initial_timer, hold_timer)
+      return true if pressed?(keys) || held
     end
 
     def self.pressed?(key : Int32)
