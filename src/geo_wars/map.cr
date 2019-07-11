@@ -64,10 +64,7 @@ module GeoWars
 
       if @cursor.selection?
         if selected_unit
-          # move the selected unit
-          cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
-
-          if cell && selected_unit.move(cell)
+          if selected_unit.move(@cursor, @cells)
             selected_unit.unselect
           end
         else
@@ -133,7 +130,7 @@ module GeoWars
     end
 
     def new_player_turn
-      @units.select(&.disabled?).each(&.enable)
+      @units.each(&.turn_reset)
     end
 
     def draw
@@ -143,6 +140,7 @@ module GeoWars
 
       if selected_unit
         selected_unit.draw_movement_radius(@viewport)
+        selected_unit.draw_attack_radius(@viewport)
       end
 
       @units.each { |unit| unit.draw(@viewport) }

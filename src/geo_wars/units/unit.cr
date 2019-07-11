@@ -6,6 +6,8 @@ module GeoWars
     getter? selected
     getter? disabled
 
+    @attack_cells_relative_initial : Array(NamedTuple(x: Int32, y: Int32))
+
     SIZE_RATIO = 0.5
 
     SELECTED_BORDER_TIMER = 0.75
@@ -18,10 +20,12 @@ module GeoWars
 
     DISABLED_DARKNESS = 0.325
 
-    def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT)
+    DEFAULT_ATTACK_CELLS_RELATIVE = [0, 1, -1].permutations.map { |arr| {x: arr[0], y: arr[1]} }.select { |move| (move[:x] + move[:y]).abs == 1 }
+
+    def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT, @attack_cells_relative_initial = DEFAULT_ATTACK_CELLS_RELATIVE)
       @selected = false
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
-      @moves_relative = Array(NamedTuple(x: Int32, y: Int32)).new
+      @moves_relative = [] of NamedTuple(x: Int32, y: Int32)
       @moves_relative_initial = [
         {x: 0, y: -1},
         {x: -1, y: 0},
@@ -29,6 +33,8 @@ module GeoWars
         {x: 0, y: 1},
         {x: 1, y: 0},
       ]
+
+      @attack_cells_relative = [] of NamedTuple(x: Int32, y: Int32)
     end
 
     def update(frame_time)
@@ -85,10 +91,36 @@ module GeoWars
     end
 
     def draw_movement_radius(viewport)
+      return if !selected? || @moved
+
       x = viewport.real_x(@x)
       y = viewport.real_y(@y)
 
       @moves_relative.each do |move|
+        LibRay.draw_rectangle(
+          pos_x: x + move[:x] * viewport.cell_size,
+          pos_y: y + move[:y] * viewport.cell_size,
+          width: viewport.cell_size,
+          height: viewport.cell_size,
+          color: MOVEMENT_RADIUS_COLOR
+        )
+        LibRay.draw_rectangle_lines(
+          pos_x: x + move[:x] * viewport.cell_size,
+          pos_y: y + move[:y] * viewport.cell_size,
+          width: viewport.cell_size,
+          height: viewport.cell_size,
+          color: SELECTED_BORDER_COLOR
+        )
+      end
+    end
+
+    def draw_attack_radius(viewport)
+      return if !selected? || !@moved || @attacked
+
+      x = viewport.real_x(@x)
+      y = viewport.real_y(@y)
+
+      @attack_cells_relative.each do |move|
         LibRay.draw_rectangle(
           pos_x: x + move[:x] * viewport.cell_size,
           pos_y: y + move[:y] * viewport.cell_size,
@@ -169,19 +201,45 @@ module GeoWars
       @y = y
     end
 
-    def move(cell)
-      return false if cell.unit?
+    def move(cursor, cells)
+      return if @moved
 
-      cell.unit = self
+      current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
+      cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
+
+      return false if !current_cell
+      return false if !cell || cell.unit?
+
+      current_cell.clear_unit
 
       # TODO: animate allow selected path
       jump_to(cell.x, cell.y)
 
+      cell.unit = self
+
+      @moved = true
+
+      update_attack_cells(cells)
+
       disable unless can_attack?
     end
 
+    def update_attack_cells(cells)
+      # check area for other units to attack
+      @attack_cells_relative = @attack_cells_relative_initial.select do |attack_cell_relative|
+        cell = cells.find { |c| c.x == @x + attack_cell_relative[:x] && c.y == @y + attack_cell_relative[:y] }
+
+        if cell
+          unit = cell.unit
+          unit && unit.player != player
+        else
+          false
+        end
+      end
+    end
+
     def can_attack?
-      # TODO: not yet implemented
+      @attack_cells_relative.any?
     end
 
     def selectable?(turn_player)
@@ -208,6 +266,13 @@ module GeoWars
 
     def enable
       @disabled = false
+    end
+
+    def turn_reset
+      unselect
+      enable
+      @moved = false
+      @attacked = false
     end
 
     def serialize(players)
