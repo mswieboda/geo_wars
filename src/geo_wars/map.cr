@@ -47,6 +47,7 @@ module GeoWars
       selected_unit = @units.find { |unit| unit.selected? }
 
       if selected_unit
+        # set valid moves for the cursor, within the selected unit's move radius
         valid_move_deltas.select! do |move|
           selected_unit.moves.any? do |unit_move|
             unit_move[:x] == @cursor.x + move[:x] && unit_move[:y] == @cursor.y + move[:y]
@@ -58,25 +59,24 @@ module GeoWars
       @viewport.update(@cursor, @cells_x, @cells_y)
 
       if @cursor.selection?
-        pre_selected_unit = @units.find { |unit| unit.selectable?(turn_player) && @cursor.selected?(unit.x, unit.y) }
-
-        if pre_selected_unit
-          pre_selected_unit.select(@cells, @cells_x, @cells_y)
-        else
-          @units.select(&.selected?).each(&.unselect)
-        end
-      elsif @cursor.selection_cancel?
-        @units.select(&.selected?).each(&.unselect)
-      end
-
-      if selected_unit
-        if Keys.pressed?(Keys::ACCEPT)
+        if selected_unit
+          # move the selected unit
           cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
 
           if cell && selected_unit.move(cell)
             selected_unit.unselect
           end
+        else
+          # select a new unit
+          pre_selected_unit = @units.find { |unit| unit.selectable?(turn_player) && @cursor.selected?(unit.x, unit.y) }
+
+          if pre_selected_unit
+            pre_selected_unit.select(@cells, @cells_x, @cells_y)
+          end
         end
+      elsif @cursor.selection_cancel?
+        # deselect a selected unit
+        selected_unit.unselect if selected_unit
       end
 
       @units.each { |unit| unit.update(frame_time) }
