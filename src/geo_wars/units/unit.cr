@@ -202,7 +202,7 @@ module GeoWars
     end
 
     def move(cursor, cells)
-      return if @moved
+      return attack(cursor, cells) if @moved && !@attacked
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
       cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
@@ -223,6 +223,30 @@ module GeoWars
       update_attack_cells(cells)
 
       disable unless can_attack?
+    end
+
+    def attack(cursor, cells)
+      return false if @attacked
+
+      current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
+      cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
+
+      return false if !current_cell
+      return false if !cell
+      return false unless cell.unit?
+
+      # TODO: animate allow selected path
+      attack_unit(cell.unit) if cell.unit != self
+
+      @attacked = true
+
+      update_attack_cells(cells)
+
+      disable
+    end
+
+    def attack_unit(unit)
+      puts "attack_unit!"
     end
 
     def update_attack_cells(cells)
