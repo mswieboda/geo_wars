@@ -208,7 +208,8 @@ module GeoWars
       cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
 
       return false if !current_cell
-      return false if !cell || cell.unit?
+      return false if !cell
+      return false if cell.unit? && cell.unit != self
 
       current_cell.clear_unit
 
