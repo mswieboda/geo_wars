@@ -50,15 +50,6 @@ module GeoWars
       # valid move delta, removing out of map boundaries (negative values already clamped in Cursor#movement)
       valid_move_deltas = POSSIBLE_MOVES.select { |m| @cursor.x + m[:x] < @cells_x && @cursor.y + m[:y] < @cells_y }
 
-      if selected_unit
-        # set valid moves for the cursor, within the selected unit's move radius
-        valid_move_deltas.select! do |move|
-          selected_unit.moves.any? do |unit_move|
-            unit_move[:x] == @cursor.x + move[:x] && unit_move[:y] == @cursor.y + move[:y]
-          end
-        end
-      end
-
       @cursor.update(frame_time, valid_move_deltas)
       @viewport.update(@cursor, @cells_x, @cells_y)
 

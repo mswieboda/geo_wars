@@ -192,6 +192,10 @@ module GeoWars
           cell = cells.find { |c| c.x == move[:x] && c.y == move[:y] }
 
           if cell
+            unit = cell.unit
+
+            next if unit && unit.player != player
+
             terrain_moves = terrain_moves(cell.terrain)
 
             if terrain_moves > 0
@@ -226,10 +230,6 @@ module GeoWars
       {x: move[:x] + @x, y: move[:y] + @y}
     end
 
-    def moves
-      @moves_relative.map { |move| move_absolute(move) }
-    end
-
     def jump_to(x, y)
       @x = x
       @y = y
@@ -237,6 +237,8 @@ module GeoWars
 
     def move(cursor, cells)
       return attack(cursor, cells) if @moved && !@attacked
+
+      return false unless valid_move?(cursor, @moves_relative)
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
       cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
@@ -258,8 +260,23 @@ module GeoWars
       disable unless can_attack?
     end
 
+    def valid_move?(cursor, moves_relative)
+      valid = @x == cursor.x && @y == cursor.y
+
+      unless valid
+        valid = moves_relative.any? do |move_relative|
+          move = move_absolute(move_relative)
+          at_cursor = cursor.x == move[:x] && cursor.y == move[:y]
+        end
+      end
+
+      valid
+    end
+
     def attack(cursor, cells)
       return false if @attacked
+
+      return false unless valid_move?(cursor, @attack_cells_relative)
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
       cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
