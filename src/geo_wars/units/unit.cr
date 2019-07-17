@@ -5,8 +5,10 @@ module GeoWars
     getter player : Player
     getter? selected
     getter? disabled
+    getter? remove
 
     @attack_cells_relative_initial : Array(NamedTuple(x: Int32, y: Int32))
+    @hit_points_color : LibRay::Color
 
     SIZE_RATIO = 0.5
 
@@ -22,8 +24,16 @@ module GeoWars
 
     DEFAULT_ATTACK_CELLS_RELATIVE = [0, 1, -1].permutations.map { |arr| {x: arr[0], y: arr[1]} }.select { |move| (move[:x] + move[:y]).abs == 1 }
 
+    DEFAULT_HIT_POINTS = 10
+
+    DEFAULT_DAMAGE = 6
+
     def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT, @attack_cells_relative_initial = DEFAULT_ATTACK_CELLS_RELATIVE)
       @selected = false
+      @moved = false
+      @attacked = false
+      @remove = false
+      @hit_points = DEFAULT_HIT_POINTS
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
       @moves_relative = [] of NamedTuple(x: Int32, y: Int32)
       @moves_relative_initial = [
@@ -35,6 +45,15 @@ module GeoWars
       ]
 
       @attack_cells_relative = [] of NamedTuple(x: Int32, y: Int32)
+
+      @sprite_font = LibRay.get_default_font
+
+      @hit_points_font_size = 16
+      @hit_points_spacing = 0
+      @hit_points_text = "9"
+      @hit_points_color = LibRay::WHITE
+      # @hit_points_measured = LibRay::Vector2.new
+      @hit_points_position = LibRay::Vector2.new
     end
 
     def update(frame_time)
@@ -87,6 +106,21 @@ module GeoWars
             )
           end
         end
+      end
+
+      # draw hit points
+      if @hit_points < DEFAULT_HIT_POINTS
+        LibRay.draw_text_ex(
+          sprite_font: @sprite_font,
+          text: @hit_points.to_s,
+          position: LibRay::Vector2.new(
+            x: x + @hit_points_position.x,
+            y: y + @hit_points_position.y
+          ),
+          font_size: @hit_points_font_size,
+          spacing: @hit_points_spacing,
+          color: @hit_points_color
+        )
       end
     end
 
@@ -213,7 +247,6 @@ module GeoWars
 
       current_cell.clear_unit
 
-      # TODO: animate allow selected path
       jump_to(cell.x, cell.y)
 
       cell.unit = self
@@ -235,8 +268,14 @@ module GeoWars
       return false if !cell
       return false unless cell.unit?
 
-      # TODO: animate allow selected path
-      attack_unit(cell.unit) if cell.unit != self
+      unit = cell.unit
+
+      if unit && unit != self
+        attack(unit)
+
+        current_cell.clear_unit if remove?
+        cell.clear_unit if unit.remove?
+      end
 
       @attacked = true
 
@@ -245,8 +284,30 @@ module GeoWars
       disable
     end
 
-    def attack_unit(unit)
-      puts "attack_unit!"
+    def attack(unit : Units::Unit)
+      damage = damage(unit)
+      unit.take_damage(damage)
+
+      take_damage(unit.damage(self))
+    end
+
+    def damage(unit : Units::Unit)
+      percentage = @hit_points.to_f32 / DEFAULT_HIT_POINTS.to_f32
+
+      (DEFAULT_DAMAGE * percentage).round.to_i
+    end
+
+    def take_damage(damage)
+      @hit_points -= damage
+
+      if @hit_points <= 0
+        @hit_points = 0
+        die
+      end
+    end
+
+    def die
+      @remove = true
     end
 
     def update_attack_cells(cells)

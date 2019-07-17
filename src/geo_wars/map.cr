@@ -81,6 +81,8 @@ module GeoWars
       end
 
       @units.each { |unit| unit.update(frame_time) }
+      # @units.select(&.remove?).each { |u| }
+      @units.reject!(&.remove?)
 
       editor_update(frame_time)
     end
