@@ -4,10 +4,14 @@ module GeoWars
     @players : Array(Player)
 
     @turn_color : LibRay::Color
+    @hud_info_color : LibRay::Color
 
     HUD_MARGIN = 8
 
     TURN_TEXT_PADDING = 4
+
+    HUD_INFO_TEXT_PADDING     = 8
+    HUD_INFO_BACKGROUND_COLOR = LibRay::Color.new(r: 0, g: 0, b: 0, a: 100)
 
     NEXT_TURN_KEY_HOLD_INITIAL_TIMER = 0.5
     NEXT_TURN_KEY_HOLD_TIMER         =   1
@@ -40,6 +44,16 @@ module GeoWars
       @turn_measured = LibRay::Vector2.new
       @turn_position = LibRay::Vector2.new
 
+      @hud_info_font_size = 14
+      @hud_info_spacing = 4
+      @hud_info_color = LibRay::WHITE
+      @hud_info_measured = LibRay.measure_text_ex(
+        sprite_font: @sprite_font,
+        text: "Def 0",
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing
+      )
+
       new_turn
 
       @next_turn_key_hold_initial_timer = Timer.new(NEXT_TURN_KEY_HOLD_INITIAL_TIMER)
@@ -71,7 +85,63 @@ module GeoWars
     end
 
     def draw_hud
+      draw_hud_info
       draw_hud_turn
+    end
+
+    def draw_hud_info
+      width = 128
+      height = 96
+
+      LibRay.draw_rectangle(
+        pos_x: Game::SCREEN_WIDTH - width - HUD_MARGIN,
+        pos_y: Game::SCREEN_HEIGHT - height - HUD_MARGIN,
+        width: width,
+        height: height,
+        color: HUD_INFO_BACKGROUND_COLOR
+      )
+
+      text_x = Game::SCREEN_WIDTH - width - HUD_MARGIN + HUD_INFO_TEXT_PADDING
+      text_y = Game::SCREEN_HEIGHT - height - HUD_MARGIN + HUD_INFO_TEXT_PADDING
+
+      # description
+      LibRay.draw_text_ex(
+        sprite_font: @sprite_font,
+        text: @map.selected_cell.terrain.to_s,
+        position: LibRay::Vector2.new(
+          x: text_x,
+          y: text_y,
+        ),
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing,
+        color: @hud_info_color
+      )
+
+      # defense
+      LibRay.draw_text_ex(
+        sprite_font: @sprite_font,
+        text: "Def: #{@map.selected_cell.terrain.defense}",
+        position: LibRay::Vector2.new(
+          x: text_x,
+          y: text_y + @hud_info_measured.y + HUD_INFO_TEXT_PADDING
+        ),
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing,
+        color: @hud_info_color
+      )
+
+      # moves
+      LibRay.draw_text_ex(
+        sprite_font: @sprite_font,
+        text: "Moves: #{@map.selected_cell.terrain.moves}",
+        position: LibRay::Vector2.new(
+          x: text_x,
+          y: text_y + (@hud_info_measured.y + HUD_INFO_TEXT_PADDING) * 2
+        ),
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing,
+        color: @hud_info_color
+      )
     end
 
     def draw_hud_turn

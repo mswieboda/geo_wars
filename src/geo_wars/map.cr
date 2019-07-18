@@ -78,6 +78,16 @@ module GeoWars
       editor_update(frame_time)
     end
 
+    def selected_cell
+      selected_cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
+
+      unless selected_cell
+        raise "Error: Map#selected_cell, couldn't find cell from cursor: (#{@cursor.x}, #{@cursor.y})"
+      end
+
+      selected_cell.as(MapCell)
+    end
+
     def update_cells
       @cells.select(&.unit?).each(&.clear_unit)
 
