@@ -35,13 +35,17 @@ module GeoWars
         if @players.size > 0
           @units << Units::Soldier.new(3, 3, @players[0])
           @units << Units::Soldier.new(5, 5, @players[0])
+          @units << Units::Knight.new(1, 1, @players[0])
         end
 
         if @players.size > 1
           @units << Units::Soldier.new(4, 4, @players[1])
           @units << Units::Soldier.new(13, 3, @players[1])
           @units << Units::Soldier.new(15, 5, @players[1])
+          @units << Units::Knight.new(11, 3, @players[1])
         end
+
+        update_cells
       end
     end
 

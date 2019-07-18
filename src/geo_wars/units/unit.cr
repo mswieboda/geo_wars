@@ -174,11 +174,18 @@ module GeoWars
     end
 
     def update_moves(cells, cells_x, cells_y)
+      puts "update_moves started"
       # TODO: not sure why it should be @max_movement + 1, check into this
+      start_time = Time.now
       @moves_relative = add_moves(@moves_relative_initial, @max_movement + 1, cells, cells_x, cells_y)
+      end_time = Time.now
+
+      puts "update_moves ended"
+      puts "update_moves took #{end_time - start_time}"
     end
 
     def add_moves(moves, moves_left, cells, cells_x, cells_y)
+      puts "add_moves"
       child_moves = [] of NamedTuple(x: Int32, y: Int32)
 
       return child_moves if moves_left <= 0 || moves.empty?
@@ -403,12 +410,18 @@ module GeoWars
 
       sub_class_info = class_info.split(":").last
 
+      klass = Units::Unit
+
       case sub_class_info
+      when .starts_with?("k")
+        klass = Units::Knight
       when .starts_with?("s")
-        Units::Soldier.new(x, y, players[player_index])
+        klass = Units::Soldier
       else
-        Units::Unit.new(x, y, players[player_index])
+        klass = Units::Unit
       end
+
+      klass.new(x, y, players[player_index])
     end
   end
 end
