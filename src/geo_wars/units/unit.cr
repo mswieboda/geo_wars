@@ -177,6 +177,7 @@ module GeoWars
       puts "update_moves started"
       # TODO: not sure why it should be @max_movement + 1, check into this
       start_time = Time.now
+      # TODO: remove 0,0 here, and inside add_move remove already added (duplicate) moves
       @moves_relative = add_moves(@moves_relative_initial, @max_movement + 1, cells, cells_x, cells_y)
       end_time = Time.now
 
@@ -185,7 +186,6 @@ module GeoWars
     end
 
     def add_moves(moves, moves_left, cells, cells_x, cells_y)
-      puts "add_moves"
       child_moves = [] of NamedTuple(x: Int32, y: Int32)
 
       return child_moves if moves_left <= 0 || moves.empty?
