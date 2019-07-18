@@ -55,7 +55,7 @@ module GeoWars
 
       if @cursor.selection?
         if selected_unit
-          if selected_unit.move(@cursor, @cells)
+          if selected_unit.move(selected_cell, @cells)
             selected_unit.unselect
           end
         else

@@ -235,23 +235,21 @@ module GeoWars
       @y = y
     end
 
-    def move(cursor, cells)
-      return attack(cursor, cells) if @moved && !@attacked
+    def move(selected_cell, cells)
+      return attack(selected_cell, cells) if @moved && !@attacked
 
-      return false unless valid_move?(cursor, @moves_relative)
+      return false unless valid_move?(selected_cell, @moves_relative)
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
-      cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
 
       return false if !current_cell
-      return false if !cell
-      return false if cell.unit? && cell.unit != self
+      return false if selected_cell.unit? && selected_cell.unit != self
 
       current_cell.clear_unit
 
-      jump_to(cell.x, cell.y)
+      jump_to(selected_cell.x, selected_cell.y)
 
-      cell.unit = self
+      selected_cell.unit = self
 
       @moved = true
 
@@ -260,38 +258,36 @@ module GeoWars
       disable unless can_attack?
     end
 
-    def valid_move?(cursor, moves_relative)
-      valid = @x == cursor.x && @y == cursor.y
+    def valid_move?(selected_cell, moves_relative)
+      valid = @x == selected_cell.x && @y == selected_cell.y
 
       unless valid
         valid = moves_relative.any? do |move_relative|
           move = move_absolute(move_relative)
-          at_cursor = cursor.x == move[:x] && cursor.y == move[:y]
+          selected_cell.x == move[:x] && selected_cell.y == move[:y]
         end
       end
 
       valid
     end
 
-    def attack(cursor, cells)
+    def attack(selected_cell, cells)
       return false if @attacked
 
-      return false unless valid_move?(cursor, @attack_cells_relative)
+      return false unless valid_move?(selected_cell, @attack_cells_relative)
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
-      cell = cells.find { |cell| cursor.selected?(cell.x, cell.y) }
 
       return false if !current_cell
-      return false if !cell
-      return false unless cell.unit?
+      return false unless selected_cell.unit?
 
-      unit = cell.unit
+      unit = selected_cell.unit
 
       if unit && unit != self
-        attack(unit, cell, current_cell)
+        attack(unit, selected_cell, current_cell)
 
         current_cell.clear_unit if remove?
-        cell.clear_unit if unit.remove?
+        selected_cell.clear_unit if unit.remove?
       end
 
       @attacked = true
