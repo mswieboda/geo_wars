@@ -288,7 +288,7 @@ module GeoWars
       unit = cell.unit
 
       if unit && unit != self
-        attack(unit)
+        attack(unit, cell, current_cell)
 
         current_cell.clear_unit if remove?
         cell.clear_unit if unit.remove?
@@ -301,11 +301,9 @@ module GeoWars
       disable
     end
 
-    def attack(unit : Units::Unit)
-      damage = damage(unit)
-      unit.take_damage(damage)
-
-      take_damage(unit.damage(self))
+    def attack(unit : Units::Unit, unit_cell, current_cell)
+      unit.take_damage(damage(unit), unit_cell)
+      take_damage(unit.damage(self), current_cell)
     end
 
     def damage(unit : Units::Unit)
@@ -314,8 +312,8 @@ module GeoWars
       (DEFAULT_DAMAGE * percentage).round.to_i
     end
 
-    def take_damage(damage)
-      @hit_points -= damage
+    def take_damage(damage, cell)
+      @hit_points -= (damage * cell.terrain.defense_percentage).round.to_i
 
       if @hit_points <= 0
         @hit_points = 0

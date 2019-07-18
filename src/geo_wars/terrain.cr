@@ -1,4 +1,8 @@
 module GeoWars
+  module TerrainConstants
+    DEFENSE_PERCENTAGE = 0.15
+  end
+
   enum Terrain
     Field
     Forest
@@ -38,6 +42,27 @@ module GeoWars
       else
         0
       end
+    end
+
+    def defense
+      case self
+      when Field
+        1
+      when Forest
+        2
+      when Road
+        0
+      when Water
+        0
+      when Mountain
+        3
+      else
+        0
+      end
+    end
+
+    def defense_percentage
+      1.0 - self.defense * TerrainConstants::DEFENSE_PERCENTAGE
     end
 
     def passable?
