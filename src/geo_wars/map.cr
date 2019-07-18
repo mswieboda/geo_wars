@@ -3,6 +3,7 @@ require "./units/*"
 module GeoWars
   class Map
     property turn_player : Player
+    property selected_unit : Units::Unit | Nil
     getter? editing
 
     @cells : Array(MapCell)
@@ -45,7 +46,7 @@ module GeoWars
     end
 
     def update(frame_time)
-      selected_unit = @units.find(&.selected?)
+      @selected_unit = @units.find(&.selected?)
 
       # valid move delta, removing out of map boundaries (negative values already clamped in Cursor#movement)
       valid_move_deltas = POSSIBLE_MOVES.select { |m| @cursor.x + m[:x] < @cells_x && @cursor.y + m[:y] < @cells_y }
@@ -55,8 +56,8 @@ module GeoWars
 
       if @cursor.selection?
         if selected_unit
-          if selected_unit.move(selected_cell, @cells)
-            selected_unit.unselect
+          if selected_unit.try { |u| u.move(cursor_cell, @cells) }
+            selected_unit.try(&.unselect)
           end
         else
           # select a new unit
@@ -68,7 +69,7 @@ module GeoWars
         end
       elsif @cursor.selection_cancel?
         # deselect a selected unit
-        selected_unit.unselect if selected_unit
+        selected_unit.try(&.unselect)
       end
 
       @units.each { |unit| unit.update(frame_time) }
@@ -78,14 +79,14 @@ module GeoWars
       editor_update(frame_time)
     end
 
-    def selected_cell
-      selected_cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
+    def cursor_cell
+      cursor_cell = @cells.find { |cell| @cursor.selected?(cell.x, cell.y) }
 
-      unless selected_cell
-        raise "Error: Map#selected_cell, couldn't find cell from cursor: (#{@cursor.x}, #{@cursor.y})"
+      unless cursor_cell
+        raise "Error: Map#cursor_cell, couldn't find cell from cursor: (#{@cursor.x}, #{@cursor.y})"
       end
 
-      selected_cell.as(MapCell)
+      cursor_cell.as(MapCell)
     end
 
     def update_cells
@@ -139,12 +140,8 @@ module GeoWars
     def draw
       @cells.each { |cell| cell.draw(@viewport) }
 
-      selected_unit = @units.find(&.selected?)
-
-      if selected_unit
-        selected_unit.draw_movement_radius(@viewport)
-        selected_unit.draw_attack_radius(@viewport)
-      end
+      selected_unit.try(&.draw_movement_radius(@viewport))
+      selected_unit.try(&.draw_attack_radius(@viewport))
 
       @units.each { |unit| unit.draw(@viewport) }
 

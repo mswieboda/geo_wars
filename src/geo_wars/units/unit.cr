@@ -3,6 +3,7 @@ module GeoWars
     getter x : Int32
     getter y : Int32
     getter player : Player
+    getter max_movement
     getter? selected
     getter? disabled
     getter? remove
@@ -24,16 +25,16 @@ module GeoWars
 
     DEFAULT_ATTACK_CELLS_RELATIVE = [0, 1, -1].permutations.map { |arr| {x: arr[0], y: arr[1]} }.select { |move| (move[:x] + move[:y]).abs == 1 }
 
-    DEFAULT_HIT_POINTS = 10
+    MAX_HIT_POINTS = 10
 
-    DEFAULT_DAMAGE = 6
+    DEFAULT_DAMAGE = 1
 
-    def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT, @attack_cells_relative_initial = DEFAULT_ATTACK_CELLS_RELATIVE)
+    def initialize(@x, @y, @player, @max_movement = MAX_MOVEMENT, @default_damage = DEFAULT_DAMAGE, @attack_cells_relative_initial = DEFAULT_ATTACK_CELLS_RELATIVE)
       @selected = false
       @moved = false
       @attacked = false
       @remove = false
-      @hit_points = DEFAULT_HIT_POINTS
+      @hit_points = MAX_HIT_POINTS
       @selected_border_timer = Timer.new(SELECTED_BORDER_TIMER)
       @moves_relative = [] of NamedTuple(x: Int32, y: Int32)
       @moves_relative_initial = [
@@ -109,7 +110,7 @@ module GeoWars
       end
 
       # draw hit points
-      if @hit_points < DEFAULT_HIT_POINTS
+      if @hit_points < MAX_HIT_POINTS
         LibRay.draw_text_ex(
           sprite_font: @sprite_font,
           text: @hit_points.to_s,
@@ -235,21 +236,21 @@ module GeoWars
       @y = y
     end
 
-    def move(selected_cell, cells)
-      return attack(selected_cell, cells) if @moved && !@attacked
+    def move(cursor_cell, cells)
+      return attack(cursor_cell, cells) if @moved && !@attacked
 
-      return false unless valid_move?(selected_cell, @moves_relative)
+      return false unless valid_move?(cursor_cell, @moves_relative)
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
 
       return false if !current_cell
-      return false if selected_cell.unit? && selected_cell.unit != self
+      return false if cursor_cell.unit? && cursor_cell.unit != self
 
       current_cell.clear_unit
 
-      jump_to(selected_cell.x, selected_cell.y)
+      jump_to(cursor_cell.x, cursor_cell.y)
 
-      selected_cell.unit = self
+      cursor_cell.unit = self
 
       @moved = true
 
@@ -258,36 +259,36 @@ module GeoWars
       disable unless can_attack?
     end
 
-    def valid_move?(selected_cell, moves_relative)
-      valid = @x == selected_cell.x && @y == selected_cell.y
+    def valid_move?(cursor_cell, moves_relative)
+      valid = @x == cursor_cell.x && @y == cursor_cell.y
 
       unless valid
         valid = moves_relative.any? do |move_relative|
           move = move_absolute(move_relative)
-          selected_cell.x == move[:x] && selected_cell.y == move[:y]
+          cursor_cell.x == move[:x] && cursor_cell.y == move[:y]
         end
       end
 
       valid
     end
 
-    def attack(selected_cell, cells)
+    def attack(cursor_cell, cells)
       return false if @attacked
 
-      return false unless valid_move?(selected_cell, @attack_cells_relative)
+      return false unless valid_move?(cursor_cell, @attack_cells_relative)
 
       current_cell = cells.find { |cell| cell.x == @x && cell.y == @y }
 
       return false if !current_cell
-      return false unless selected_cell.unit?
+      return false unless cursor_cell.unit?
 
-      unit = selected_cell.unit
+      unit = cursor_cell.unit
 
       if unit && unit != self
-        attack(unit, selected_cell, current_cell)
+        attack(unit, cursor_cell, current_cell)
 
         current_cell.clear_unit if remove?
-        selected_cell.clear_unit if unit.remove?
+        cursor_cell.clear_unit if unit.remove?
       end
 
       @attacked = true
@@ -298,18 +299,25 @@ module GeoWars
     end
 
     def attack(unit : Units::Unit, unit_cell, current_cell)
-      unit.take_damage(damage(unit), unit_cell)
-      take_damage(unit.damage(self), current_cell)
+      unit.take_damage(damage(unit, unit_cell))
+      take_damage(unit.damage(self, current_cell))
     end
 
-    def damage(unit : Units::Unit)
-      percentage = @hit_points.to_f32 / DEFAULT_HIT_POINTS.to_f32
-
-      (DEFAULT_DAMAGE * percentage).round.to_i
+    def attack_preview_percentage(unit : Units::Unit, unit_cell)
+      (100.0 * damage(unit, unit_cell) / MAX_HIT_POINTS).round.to_i
     end
 
-    def take_damage(damage, cell)
-      @hit_points -= (damage * cell.terrain.defense_percentage).round.to_i
+    def damage(unit : Units::Unit, unit_cell)
+      unit_percentage = 1.0
+      power_percentage = @hit_points.to_f32 / MAX_HIT_POINTS.to_f32
+      defense_percentage = unit_cell.terrain.defense_percentage
+      percentage = unit_percentage * power_percentage * defense_percentage
+
+      (@default_damage * percentage).round.to_i
+    end
+
+    def take_damage(damage)
+      @hit_points -= damage
 
       if @hit_points <= 0
         @hit_points = 0
@@ -370,6 +378,10 @@ module GeoWars
       enable
       @moved = false
       @attacked = false
+    end
+
+    def description
+      "Unit"
     end
 
     def serialize(players)

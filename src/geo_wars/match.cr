@@ -1,5 +1,8 @@
 module GeoWars
   class Match
+    delegate cursor_cell, to: @map
+    delegate selected_unit, to: @map
+
     @map : Map
     @players : Array(Player)
 
@@ -90,27 +93,32 @@ module GeoWars
     end
 
     def draw_hud_info
+      draw_hud_terrain_info
+      draw_hud_unit_info
+    end
+
+    def draw_hud_terrain_info
       width = 128
       height = 96
 
+      x = Game::SCREEN_WIDTH - width - HUD_MARGIN
+      y = Game::SCREEN_HEIGHT - height - HUD_MARGIN
+
       LibRay.draw_rectangle(
-        pos_x: Game::SCREEN_WIDTH - width - HUD_MARGIN,
-        pos_y: Game::SCREEN_HEIGHT - height - HUD_MARGIN,
+        pos_x: x,
+        pos_y: y,
         width: width,
         height: height,
         color: HUD_INFO_BACKGROUND_COLOR
       )
 
-      text_x = Game::SCREEN_WIDTH - width - HUD_MARGIN + HUD_INFO_TEXT_PADDING
-      text_y = Game::SCREEN_HEIGHT - height - HUD_MARGIN + HUD_INFO_TEXT_PADDING
-
       # description
       LibRay.draw_text_ex(
         sprite_font: @sprite_font,
-        text: @map.selected_cell.terrain.to_s,
+        text: cursor_cell.terrain.to_s,
         position: LibRay::Vector2.new(
-          x: text_x,
-          y: text_y,
+          x: x + HUD_INFO_TEXT_PADDING,
+          y: y + HUD_INFO_TEXT_PADDING,
         ),
         font_size: @hud_info_font_size,
         spacing: @hud_info_spacing,
@@ -120,10 +128,10 @@ module GeoWars
       # defense
       LibRay.draw_text_ex(
         sprite_font: @sprite_font,
-        text: "Def: #{@map.selected_cell.terrain.defense}",
+        text: "Def: #{cursor_cell.terrain.defense}",
         position: LibRay::Vector2.new(
-          x: text_x,
-          y: text_y + @hud_info_measured.y + HUD_INFO_TEXT_PADDING
+          x: x + HUD_INFO_TEXT_PADDING,
+          y: y + HUD_INFO_TEXT_PADDING + @hud_info_measured.y + HUD_INFO_TEXT_PADDING
         ),
         font_size: @hud_info_font_size,
         spacing: @hud_info_spacing,
@@ -133,10 +141,74 @@ module GeoWars
       # moves
       LibRay.draw_text_ex(
         sprite_font: @sprite_font,
-        text: "Moves: #{@map.selected_cell.terrain.moves}",
+        text: "Moves: #{cursor_cell.terrain.moves}",
         position: LibRay::Vector2.new(
-          x: text_x,
-          y: text_y + (@hud_info_measured.y + HUD_INFO_TEXT_PADDING) * 2
+          x: x + HUD_INFO_TEXT_PADDING,
+          y: y + HUD_INFO_TEXT_PADDING + (@hud_info_measured.y + HUD_INFO_TEXT_PADDING) * 2
+        ),
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing,
+        color: @hud_info_color
+      )
+    end
+
+    def draw_hud_unit_info
+      cursor_unit = cursor_cell.unit
+
+      return unless cursor_unit
+
+      cursor_unit = cursor_unit.as(Units::Unit)
+
+      width = 128
+      height = 96
+
+      x = Game::SCREEN_WIDTH - width * 2 - HUD_MARGIN
+      y = Game::SCREEN_HEIGHT - height - HUD_MARGIN
+
+      LibRay.draw_rectangle(
+        pos_x: x,
+        pos_y: y,
+        width: width,
+        height: height,
+        color: HUD_INFO_BACKGROUND_COLOR
+      )
+
+      # description
+      LibRay.draw_text_ex(
+        sprite_font: @sprite_font,
+        text: cursor_unit.description.to_s,
+        position: LibRay::Vector2.new(
+          x: x + HUD_INFO_TEXT_PADDING,
+          y: y + HUD_INFO_TEXT_PADDING,
+        ),
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing,
+        color: @hud_info_color
+      )
+
+      # moves
+      LibRay.draw_text_ex(
+        sprite_font: @sprite_font,
+        text: "Moves: #{cursor_unit.max_movement}",
+        position: LibRay::Vector2.new(
+          x: x + HUD_INFO_TEXT_PADDING,
+          y: y + HUD_INFO_TEXT_PADDING + @hud_info_measured.y + HUD_INFO_TEXT_PADDING
+        ),
+        font_size: @hud_info_font_size,
+        spacing: @hud_info_spacing,
+        color: @hud_info_color
+      )
+
+      # damage
+      return unless selected_unit
+      return if selected_unit.try { |u| u.player == cursor_unit.player }
+
+      LibRay.draw_text_ex(
+        sprite_font: @sprite_font,
+        text: "Damage: #{selected_unit.try { |u| u.attack_preview_percentage(cursor_unit, cursor_cell) }}%",
+        position: LibRay::Vector2.new(
+          x: x + HUD_INFO_TEXT_PADDING,
+          y: y + HUD_INFO_TEXT_PADDING + (@hud_info_measured.y + HUD_INFO_TEXT_PADDING) * 2
         ),
         font_size: @hud_info_font_size,
         spacing: @hud_info_spacing,
